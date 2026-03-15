@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "_comment": "Replace <YOUR_PROJECT_PATH> with your actual project directory. Claude Code has built-in file access, so this MCP server is optional.",
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-filesystem", "<YOUR_PROJECT_PATH>"],
+      "env": {
+        "NODE_ENV": "development"
+      }
+    }
+  }
+}

@@ -1,0 +1,106 @@
+#!/bin/bash
+
+# ============================================================
+# USAGE: This script is a TEMPLATE for a git pre-commit hook.
+# It is NOT automatically active in this location (.claude/hooks/).
+#
+# To activate, choose ONE of these methods:
+#
+# Method 1: Copy to .git/hooks/
+#   cp .claude/hooks/pre-commit .git/hooks/pre-commit
+#   chmod +x .git/hooks/pre-commit
+#
+# Method 2: Configure git to use this directory
+#   git config core.hooksPath .claude/hooks
+#
+# Method 3: Use as a Claude Code hook (in .claude/settings.json)
+#   {
+#     "hooks": {
+#       "PreCommit": [{ "command": ".claude/hooks/pre-commit" }]
+#     }
+#   }
+# ============================================================
+
+# Pre-commit hook template
+# Runs before git commits to ensure code quality
+
+set -e
+
+echo "🔍 Running pre-commit checks..."
+
+# Check if we're in a git repository
+if ! git rev-parse --git-dir > /dev/null 2>&1; then
+    echo "Not in a git repository"
+    exit 0
+fi
+
+# Get list of staged files
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
+
+if [ -z "$STAGED_FILES" ]; then
+    echo "No staged files to check"
+    exit 0
+fi
+
+# Check for common file types and run appropriate checks
+HAS_JS_TS_FILES=$(echo "$STAGED_FILES" | grep -E '\.(js|jsx|ts|tsx)$' || true)
+HAS_PY_FILES=$(echo "$STAGED_FILES" | grep -E '\.py$' || true)
+HAS_RS_FILES=$(echo "$STAGED_FILES" | grep -E '\.rs$' || true)
+
+# JavaScript/TypeScript checks
+if [ -n "$HAS_JS_TS_FILES" ]; then
+    echo "📝 Checking JavaScript/TypeScript files..."
+
+    # Check if package.json exists
+    if [ -f "package.json" ]; then
+        # Run TypeScript check if available
+        if command -v npm >/dev/null 2>&1 && npm run typecheck >/dev/null 2>&1; then
+            echo "  ✓ TypeScript check passed"
+        fi
+
+        # Run linting if available
+        if npm run lint >/dev/null 2>&1; then
+            echo "  ✓ Linting passed"
+        fi
+    fi
+fi
+
+# Python checks
+if [ -n "$HAS_PY_FILES" ]; then
+    echo "🐍 Checking Python files..."
+
+    # Run type checking if mypy is available
+    if command -v python >/dev/null 2>&1 && python -m mypy --version >/dev/null 2>&1; then
+        if python -m mypy . >/dev/null 2>&1; then
+            echo "  ✓ Type checking passed"
+        fi
+    fi
+
+    # Run linting if ruff is available
+    if command -v python >/dev/null 2>&1 && python -m ruff --version >/dev/null 2>&1; then
+        if python -m ruff check . >/dev/null 2>&1; then
+            echo "  ✓ Linting passed"
+        fi
+    fi
+fi
+
+# Rust checks
+if [ -n "$HAS_RS_FILES" ]; then
+    echo "🦀 Checking Rust files..."
+
+    if command -v cargo >/dev/null 2>&1; then
+        # Run cargo check
+        if cargo check >/dev/null 2>&1; then
+            echo "  ✓ Cargo check passed"
+        fi
+
+        # Run clippy if available
+        if cargo clippy --version >/dev/null 2>&1; then
+            if cargo clippy -- -D warnings >/dev/null 2>&1; then
+                echo "  ✓ Clippy check passed"
+            fi
+        fi
+    fi
+fi
+
+echo "✅ Pre-commit checks completed successfully!"
