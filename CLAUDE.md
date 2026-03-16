@@ -1,138 +1,94 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code when working in this personal development template repository.
-
 ## Repository Purpose
 
-Personal development template with reusable configurations and best practices. Copy/fork for new projects.
+Claude Code環境を前提としたマルチエージェントデータ分析プラットフォーム。edatool（CLI + Python API）を通じて、複数の専門エージェントが協調してデータ分析を実行する。
 
-## Commands
+## edatool コマンド
 
-### Node.js Projects
 ```bash
-npm install          # Install dependencies
-npm run dev         # Start development server
-npm run build       # Build for production
-npm run test        # Run tests
-npm run lint        # Run linting
-npm run typecheck   # TypeScript type checking
+# データ分析
+uv run edatool summarize <file>                          # 概要（軽量）
+uv run edatool profile <file>                            # フルプロファイル
+uv run edatool correlations <file> [--target col]        # 相関分析
+uv run edatool quality-check <file>                      # 品質チェック
+
+# 可視化
+uv run edatool plot histogram <file> --column <col> -o <out.png>
+uv run edatool plot scatter <file> --x <col1> --y <col2> -o <out.png>
+uv run edatool plot heatmap <file> -o <out.png>
+
+# 出力形式
+# --format markdown (デフォルト) / --format json
+# -o <file> で保存（省略時はstdout）
 ```
 
-### Python Projects (uv-based)
+## 開発コマンド
+
 ```bash
 uv sync                          # Install dependencies
 uv sync --extra dev              # Install with dev dependencies
-uv sync --extra kaggle           # Install with Kaggle dependencies
-uv run python -m pytest         # Run tests
-uv run python -m black .         # Format code
-uv run python -m ruff check      # Lint code
-uv run python -m mypy .          # Type checking
-uv run jupyter notebook          # Start Jupyter
-uv run jupyter lab              # Start JupyterLab
+uv run python -m pytest          # Run tests
+uv run python -m ruff check      # Lint
+uv run python -m black .         # Format
+uv run python -m mypy .          # Type check
 ```
 
-### Kaggle API Commands
-```bash
-# Setup: Place kaggle.json in ~/.kaggle/ (get from kaggle.com/account)
-uv run kaggle competitions list              # List competitions
-uv run kaggle competitions download -c NAME  # Download competition data
-uv run kaggle competitions submit -c NAME -f submission.csv -m "Message"
+## データ分析エージェント
 
-uv run kaggle kernels list --competition NAME --sort-by voteCount  # Top notebooks
-uv run kaggle kernels pull user/notebook-name -p ./notebooks/      # Download notebook
+| エージェント | 役割 |
+|---|---|
+| `data-analyst` | プロファイリング・統計分析・品質チェック |
+| `visualizer` | グラフ・チャート生成 |
+| `reporter` | レポート統合・整形 |
+| `domain-expert` | ドメイン知識に基づく助言・解釈 |
 
-uv run kaggle datasets list --search "query"  # Search datasets
-uv run kaggle datasets download user/dataset  # Download dataset
-```
+### ワークフロー
+1. domain-expert: データ概要を見て分析方針を助言
+2. data-analyst: プロファイリング・品質チェック・相関分析
+3. visualizer: 重要な知見の可視化
+4. reporter: 分析結果・グラフをレポートに統合
 
-See `.claude/skills/kaggle/kaggle-api-setup.md` for detailed setup instructions.
+詳細: `.claude/skills/analysis-workflow/SKILL.md`
 
-## Code Style
+## 汎用エージェント
 
-- Use ES modules (import/export) syntax, not CommonJS (require)
-- Destructure imports when possible (e.g., import { foo } from 'bar')
-- Follow language-specific formatting (Prettier, Black, rustfmt)
-- Use strict TypeScript configuration when applicable
-- Prefer functional components and hooks in React
-
-## Workflow
-
-- Use `.claude/skills/` directory for project capabilities and domain knowledge
-- Copy templates from `.claude/skills/templates/` to create new project-specific skills
-- Run typecheck after making code changes
-- Write tests for new functionality
-- Use conventional commit messages
-- Prefer composition over inheritance
-
-### Skills File Management
-
-- **SKILL.md** はスキルのエントリーポイント（インデックス）として100行以内に保つ
-- 詳細な内容は個別の支援ファイルに分割し、SKILL.mdから相対パスでリンクする
-- 各支援ファイルは1つのトピックに集中させ、100〜300行を目安とする
-- 支援ファイルが300行を超えた場合はさらに分割を検討する
-
-```
-.claude/skills/my-skill/
-├── SKILL.md                  # エントリーポイント（インデックス、~100行以内）
-├── topic-a.md                # トピックAの詳細（100-300行）
-├── topic-b-workflow.md       # トピックBのワークフロー（100-300行）
-└── topic-c.md                # トピックCの詳細（100-300行）
-```
-
-SKILL.mdでの参照例:
-```markdown
-## Available Resources
-- [topic-a.md](topic-a.md) - トピックAの説明
-- [topic-b-workflow.md](topic-b-workflow.md) - トピックBのワークフロー
-```
-
-## Agent Teams (Experimental)
-
-マルチエージェント協調ワークフロー機能。複数のClaude Codeセッションがチームとして連携する。
-
-### セットアップ
-`.claude/settings.json` で `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS: "1"` を設定済み。
-
-### 定義済みエージェント（`.claude/agents/`）
 | エージェント | 用途 |
 |---|---|
 | `team-lead` | チームオーケストレーター |
-| `frontend-dev` | フロントエンド開発 |
 | `backend-dev` | バックエンド開発 |
 | `qa-tester` | テスト・QA |
 | `code-reviewer` | コードレビュー |
-| `tech-innovation-advisor` | 技術戦略アドバイス |
 
-### 使い方
-- チーム起動: `TeamCreate` → `TaskCreate` → `Task`（teammate spawn）
-- 詳細: `.claude/skills/teams/` を参照
+## Code Style
+
+- Polarsをメインのデータフレームライブラリとして使用
+- Black + ruff でフォーマット・リント
+- mypy strict モード
+- Prefer composition over inheritance
 
 ## File Structure
 
 ```
 project-root/
-├── src/                 # Source code
-├── tests/              # Test files
-├── CLAUDE.md           # This file
-├── .claude/            # Claude Code configurations
-│   ├── agents/         # Custom agent definitions
-│   │   ├── team-lead.md
-│   │   ├── frontend-dev.md
-│   │   ├── backend-dev.md
-│   │   ├── qa-tester.md
-│   │   ├── code-reviewer.md
-│   │   └── tech-innovation-advisor.md
-│   └── skills/         # Skills directory (Claude Code recommended format)
-│       ├── kaggle/     # Kaggle competition skills
-│       │   └── SKILL.md
-│       ├── development/# Core development skills
-│       │   └── SKILL.md
-│       ├── teams/      # Agent Teams guide
-│       │   └── SKILL.md
-│       └── templates/  # Skill templates
-│           └── SKILL.md
-├── kaggle-template/    # Kaggle competition template
-└── README.md           # Project overview
+├── src/edatool/         # edatoolパッケージ
+│   ├── cli.py           # CLIエントリーポイント
+│   ├── core/            # 型定義・設定
+│   ├── io/              # データ読込
+│   ├── analysis/        # 分析モジュール
+│   ├── viz/             # 可視化
+│   └── reporting/       # レポート生成
+├── tests/               # テスト
+├── data/                # サンプルデータ
+├── docs/research/       # 調査・設計ドキュメント
+├── .claude/
+│   ├── agents/          # エージェント定義
+│   └── skills/          # スキル・ドメイン知識
+│       ├── analysis-workflow/
+│       ├── domains/
+│       ├── development/
+│       └── teams/
+└── pyproject.toml
 ```
 
 ## Repository Etiquette
@@ -140,24 +96,3 @@ project-root/
 - Branch naming: feature/description, fix/description
 - Commit messages: type(scope): description
 - Always run lints and tests before committing
-
-## Special Templates
-
-### Kaggle Competition Development
-
-**Standard Setup (Local execution):**
-```bash
-cp -r kaggle-template/ my-competition/
-cd my-competition/
-uv sync --extra kaggle
-```
-
-**Google Colab Setup (Cloud execution with GPU):**
-For competitions requiring large datasets or GPU/TPU resources:
-- Develop code locally with Claude Code
-- Store data in Google Drive
-- Execute training on Google Colab
-- See `.claude/skills/kaggle/colab-workflow.md` for complete setup guide
-- Use `kaggle-template/colab_template.ipynb` as starting point
-
-The template includes specialized notebooks, directory structure, and Kaggle-specific skills at `.claude/skills/kaggle/`.
