@@ -57,22 +57,7 @@ def report_to_markdown(
         parts.append(overview)
 
     if "columns" in sections:
-        lines = [
-            "## Columns\n",
-            "| # | Column | Type | Nulls | Null% | Unique | Mean | Std | Min | Max |",
-            "|---|--------|------|------:|------:|-------:|-----:|----:|----:|----:|",
-        ]
-        for i, col in enumerate(summary.columns, 1):
-            mean = f"{col.mean:.4f}" if col.mean is not None else "-"
-            std = f"{col.std:.4f}" if col.std is not None else "-"
-            min_v = f"{col.min:.4f}" if col.min is not None else "-"
-            max_v = f"{col.max:.4f}" if col.max is not None else "-"
-            lines.append(
-                f"| {i} | {col.name} | {col.dtype} | {col.null_count:,} "
-                f"| {col.null_percent:.1f}% | {col.unique_count:,} "
-                f"| {mean} | {std} | {min_v} | {max_v} |"
-            )
-        parts.append("\n".join(lines))
+        parts.append(summary.to_markdown())
 
     if "correlation" in sections and profile.correlations is not None:
         parts.append(profile.correlations.to_markdown())

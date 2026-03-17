@@ -2,24 +2,13 @@
 
 from __future__ import annotations
 
-import matplotlib
-matplotlib.use("Agg")  # Non-interactive backend
+import numpy as np
 import matplotlib.pyplot as plt
 import polars as pl
 import seaborn as sns
 
+from edatool.core.dtypes import is_numeric
 from edatool.viz.common import save_figure
-
-# Polars numeric types
-_NUMERIC_DTYPES = (
-    pl.Int8, pl.Int16, pl.Int32, pl.Int64,
-    pl.UInt8, pl.UInt16, pl.UInt32, pl.UInt64,
-    pl.Float32, pl.Float64,
-)
-
-
-def _is_numeric(dtype: pl.DataType) -> bool:
-    return isinstance(dtype, _NUMERIC_DTYPES)
 
 
 def heatmap(
@@ -28,8 +17,7 @@ def heatmap(
 ) -> str | None:
     """Create correlation heatmap for numeric columns.
 
-    Computes Pearson correlation matrix from numeric columns and renders
-    it as an annotated seaborn heatmap.
+    Uses Polars-native correlation (no pandas dependency).
 
     Args:
         df: Input Polars DataFrame.
@@ -38,23 +26,24 @@ def heatmap(
     Returns:
         The output path if saved, otherwise None.
     """
-    numeric_cols = [col for col in df.columns if _is_numeric(df[col].dtype)]
+    numeric_cols = [col for col in df.columns if is_numeric(df[col].dtype)]
 
     if len(numeric_cols) < 2:
         raise ValueError(
             "At least 2 numeric columns are required to create a correlation heatmap."
         )
 
-    # Use pandas for correlation matrix computation (seaborn integrates well)
-    pandas_df = df.select(numeric_cols).to_pandas()
-    corr_matrix = pandas_df.corr()
+    # Compute correlation matrix using Polars native API
+    numeric_df = df.select(numeric_cols)
+    corr_df = numeric_df.corr()
+    corr_array = corr_df.to_numpy()
 
     n = len(numeric_cols)
     fig_size = max(6, n)
     fig, ax = plt.subplots(figsize=(fig_size, fig_size - 1))
 
     sns.heatmap(
-        corr_matrix,
+        corr_array,
         annot=True,
         fmt=".2f",
         cmap="coolwarm",
@@ -64,6 +53,8 @@ def heatmap(
         ax=ax,
         square=True,
         linewidths=0.5,
+        xticklabels=numeric_cols,
+        yticklabels=numeric_cols,
     )
     ax.set_title("Correlation Heatmap")
     fig.tight_layout()

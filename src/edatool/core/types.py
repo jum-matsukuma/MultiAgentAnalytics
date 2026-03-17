@@ -26,8 +26,14 @@ class ColumnStats:
     q25: float | None = None
     q75: float | None = None
 
+    _OPTIONAL_FIELDS = {"mean", "std", "min", "max", "median", "q25", "q75"}
+
     def to_dict(self) -> dict[str, Any]:
-        return {k: v for k, v in self.__dict__.items() if v is not None}
+        return {
+            k: v
+            for k, v in self.__dict__.items()
+            if not (v is None and k in self._OPTIONAL_FIELDS)
+        }
 
 
 @dataclass
@@ -82,6 +88,7 @@ class CorrelationResult:
 
     matrix: dict[str, dict[str, float]]
     high_pairs: list[tuple[str, str, float]]  # |r| > threshold
+    threshold: float = 0.8
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -96,13 +103,13 @@ class CorrelationResult:
         lines = ["## Correlation Analysis"]
         if self.high_pairs:
             lines.append("")
-            lines.append("### High Correlation Pairs (|r| > 0.8)")
+            lines.append(f"### High Correlation Pairs (|r| > {self.threshold})")
             lines.append("| Column 1 | Column 2 | Correlation |")
             lines.append("|----------|----------|------------:|")
             for a, b, r in self.high_pairs:
                 lines.append(f"| {a} | {b} | {r:.3f} |")
         else:
-            lines.append("\nNo high correlation pairs found (|r| > 0.8).")
+            lines.append(f"\nNo high correlation pairs found (|r| > {self.threshold}).")
 
         # Matrix
         cols = list(self.matrix.keys())

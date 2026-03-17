@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import matplotlib
-matplotlib.use("Agg")  # Non-interactive backend
 import matplotlib.pyplot as plt
 import polars as pl
 
@@ -38,14 +36,14 @@ def scatter(
     fig, ax = plt.subplots(figsize=(8, 6))
 
     if color is not None:
-        groups = df[color].unique().to_list()
-        cmap = plt.cm.get_cmap("tab10", len(groups))
-        for idx, group in enumerate(groups):
-            subset = df.filter(pl.col(color) == group)
+        partitions = df.partition_by(color, as_dict=True)
+        n_groups = len(partitions)
+        cmap = plt.cm.get_cmap("tab20" if n_groups > 10 else "tab10", n_groups)
+        for idx, (group_key, subset) in enumerate(partitions.items()):
             ax.scatter(
                 subset[x].to_list(),
                 subset[y].to_list(),
-                label=str(group),
+                label=str(group_key),
                 color=cmap(idx),
                 alpha=0.7,
                 s=20,

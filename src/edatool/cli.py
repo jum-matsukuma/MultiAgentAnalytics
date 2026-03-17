@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional
 
+import click
 import typer
 
 from edatool.io.loader import load
@@ -13,13 +14,15 @@ from edatool.analysis.profiler import profile
 from edatool.analysis.correlation import correlations
 from edatool.analysis.quality import quality_check
 from edatool.reporting.markdown import report_to_markdown
-from edatool.reporting.json_report import report_to_json
 
 app = typer.Typer(help="edatool - Multi-agent data analysis platform")
 plot_app = typer.Typer(help="Visualization commands")
 app.add_typer(plot_app, name="plot")
 
 _FORMAT_HELP = "Output format: 'markdown' or 'json'."
+_FORMAT_CHOICE = typer.Option(
+    "markdown", "--format", help=_FORMAT_HELP, click_type=click.Choice(["markdown", "json"])
+)
 
 
 def _output_result(text: str, output_file: Optional[Path]) -> None:
@@ -31,41 +34,34 @@ def _output_result(text: str, output_file: Optional[Path]) -> None:
         typer.echo(text)
 
 
+def _to_json(obj: object) -> str:
+    import json
+    return json.dumps(obj.to_dict(), ensure_ascii=False, indent=2)  # type: ignore[union-attr]
+
+
 @app.command(name="summarize")
 def summarize_cmd(
     file: str = typer.Argument(..., help="Path to the data file."),
-    format: str = typer.Option("markdown", "--format", help=_FORMAT_HELP),
+    output_format: str = _FORMAT_CHOICE,
     output: Optional[Path] = typer.Option(None, "-o", help="Save output to file."),
 ) -> None:
     """Quick summary of a dataset (schema + basic statistics)."""
     df = load(file)
     result = summarize(df)
-
-    if format == "json":
-        import json
-        text = json.dumps(result.to_dict(), ensure_ascii=False, indent=2)
-    else:
-        text = result.to_markdown()
-
+    text = _to_json(result) if output_format == "json" else result.to_markdown()
     _output_result(text, output)
 
 
-# Rename to avoid shadowing the imported `profile` function
 @app.command(name="profile")
 def profile_cmd(
     file: str = typer.Argument(..., help="Path to the data file."),
-    format: str = typer.Option("markdown", "--format", help=_FORMAT_HELP),
+    output_format: str = _FORMAT_CHOICE,
     output: Optional[Path] = typer.Option(None, "-o", help="Save output to file."),
 ) -> None:
     """Full profile report (stats + correlations + quality check)."""
     df = load(file)
     result = profile(df)
-
-    if format == "json":
-        text = report_to_json(result)
-    else:
-        text = report_to_markdown(result)
-
+    text = result.to_json() if output_format == "json" else report_to_markdown(result)
     _output_result(text, output)
 
 
@@ -74,38 +70,26 @@ def correlations_cmd(
     file: str = typer.Argument(..., help="Path to the data file."),
     target: Optional[str] = typer.Option(None, "--target", help="Target column name."),
     threshold: float = typer.Option(0.8, "--threshold", help="Correlation threshold."),
-    format: str = typer.Option("markdown", "--format", help=_FORMAT_HELP),
+    output_format: str = _FORMAT_CHOICE,
     output: Optional[Path] = typer.Option(None, "-o", help="Save output to file."),
 ) -> None:
     """Compute correlation matrix for numeric columns."""
     df = load(file)
     result = correlations(df, target=target, threshold=threshold)
-
-    if format == "json":
-        import json
-        text = json.dumps(result.to_dict(), ensure_ascii=False, indent=2)
-    else:
-        text = result.to_markdown()
-
+    text = _to_json(result) if output_format == "json" else result.to_markdown()
     _output_result(text, output)
 
 
 @app.command(name="quality-check")
 def quality_check_cmd(
     file: str = typer.Argument(..., help="Path to the data file."),
-    format: str = typer.Option("markdown", "--format", help=_FORMAT_HELP),
+    output_format: str = _FORMAT_CHOICE,
     output: Optional[Path] = typer.Option(None, "-o", help="Save output to file."),
 ) -> None:
     """Run data quality checks (missing values, duplicates, cardinality)."""
     df = load(file)
     result = quality_check(df)
-
-    if format == "json":
-        import json
-        text = json.dumps(result.to_dict(), ensure_ascii=False, indent=2)
-    else:
-        text = result.to_markdown()
-
+    text = _to_json(result) if output_format == "json" else result.to_markdown()
     _output_result(text, output)
 
 

@@ -2,23 +2,11 @@
 
 from __future__ import annotations
 
-import matplotlib
-matplotlib.use("Agg")  # Non-interactive backend
 import matplotlib.pyplot as plt
 import polars as pl
 
+from edatool.core.dtypes import is_numeric
 from edatool.viz.common import save_figure
-
-# Polars numeric types
-_NUMERIC_DTYPES = (
-    pl.Int8, pl.Int16, pl.Int32, pl.Int64,
-    pl.UInt8, pl.UInt16, pl.UInt32, pl.UInt64,
-    pl.Float32, pl.Float64,
-)
-
-
-def _is_numeric(dtype: pl.DataType) -> bool:
-    return isinstance(dtype, _NUMERIC_DTYPES)
 
 
 def histogram(
@@ -47,7 +35,7 @@ def histogram(
     series = df[column].drop_nulls()
     fig, ax = plt.subplots(figsize=(8, 5))
 
-    if _is_numeric(df[column].dtype):
+    if is_numeric(df[column].dtype):
         values = series.to_list()
         ax.hist(values, bins=bins, edgecolor="white", linewidth=0.5)
         ax.set_xlabel(column)

@@ -6,18 +6,8 @@ from typing import Any
 
 import polars as pl
 
+from edatool.core.dtypes import is_numeric
 from edatool.core.types import ColumnStats, DataSummary
-
-# Polars numeric types that support arithmetic statistics
-_NUMERIC_DTYPES = (
-    pl.Int8, pl.Int16, pl.Int32, pl.Int64,
-    pl.UInt8, pl.UInt16, pl.UInt32, pl.UInt64,
-    pl.Float32, pl.Float64,
-)
-
-
-def _is_numeric(dtype: pl.DataType) -> bool:
-    return isinstance(dtype, _NUMERIC_DTYPES)
 
 
 def _column_stats(
@@ -44,7 +34,7 @@ def _column_stats(
         sample_values=sample_values,
     )
 
-    if _is_numeric(dtype) and len(non_null) > 0:
+    if is_numeric(dtype) and len(non_null) > 0:
         stats.mean = non_null.mean()
         stats.std = non_null.std()
         stats.min = non_null.min()
