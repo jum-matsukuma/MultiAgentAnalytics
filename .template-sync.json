@@ -1,0 +1,25 @@
+{
+  "templateRemote": "template",
+  "templateUrl": "https://github.com/jum-matsukuma/my_template_repo.git",
+  "templateBranch": "main",
+  "lastSyncCommit": "84217028dc11e43b3603255f8fb887710d577b12",
+  "lastSyncDate": "2026-03-19T00:00:00+09:00",
+  "protectedPaths": [
+    "CLAUDE.md",
+    "README.md",
+    "pyproject.toml",
+    "uv.lock",
+    "src/",
+    "tests/",
+    "docs/",
+    "data/",
+    ".claude/agents/data-analyst.md",
+    ".claude/agents/domain-expert.md",
+    ".claude/agents/reporter.md",
+    ".claude/agents/visualizer.md",
+    ".claude/commands/analyze.md",
+    ".claude/commands/analyze-deep.md",
+    ".claude/skills/analysis-workflow/",
+    ".claude/skills/domains/"
+  ]
+}
