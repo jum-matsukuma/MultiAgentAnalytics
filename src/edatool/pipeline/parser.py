@@ -123,13 +123,21 @@ def topological_sort(steps: list[Any], from_step: str | None = None) -> list[Any
     if len(result) != len(steps):
         raise ValueError("Circular dependency detected in pipeline steps")
 
-    # Filter from_step if specified
+    # Filter from_step if specified: include from_step and transitive dependents
     if from_step is not None:
         if from_step not in step_map:
             raise ValueError(f"Step '{from_step}' not found in pipeline")
-        # Include from_step and all steps that come after it in topo order
-        idx = next(i for i, s in enumerate(result) if s.id == from_step)
-        result = result[idx:]
+        reachable: set[str] = set()
+        stack = [from_step]
+        while stack:
+            current = stack.pop()
+            if current in reachable:
+                continue
+            reachable.add(current)
+            for dep_id in dependents.get(current, []):
+                if dep_id not in reachable:
+                    stack.append(dep_id)
+        result = [s for s in result if s.id in reachable]
 
     return result
 

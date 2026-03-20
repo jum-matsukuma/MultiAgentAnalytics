@@ -148,7 +148,8 @@ class StepResult:
     """Result of executing a single step."""
 
     step_id: str
-    status: str = "pending"  # "pending", "running", "completed", "failed", "skipped"
+    # "pending" | "running" | "completed" | "failed" | "skipped" | "dry-run"
+    status: str = "pending"
     output_path: str = ""
     error: str = ""
     duration_seconds: float = 0.0
@@ -159,7 +160,7 @@ class PipelineResult:
     """Result of executing a complete pipeline."""
 
     pipeline_name: str
-    status: str = "pending"  # "completed", "failed", "partial"
+    status: str = "pending"  # "pending", "completed", "failed", "partial", "dry-run"
     output_dir: str = ""
     step_results: list[StepResult] = field(default_factory=list)
     duration_seconds: float = 0.0

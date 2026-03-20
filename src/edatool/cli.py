@@ -512,7 +512,11 @@ def pipeline_run_cmd(
 @pipeline_app.command(name="init")
 def pipeline_init_cmd(
     template: str = typer.Option(
-        ..., "--template", "-t", help="Template name (basic-eda, quality-monitor)."
+        ...,
+        "--template",
+        "-t",
+        help="Template name.",
+        click_type=click.Choice(["basic-eda", "quality-monitor"]),
     ),
     output: str = typer.Option(
         ..., "--output", "-o", help="Output file path for the pipeline JSON."

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 from pathlib import Path
 
 import pytest
@@ -264,9 +265,10 @@ class TestTopologicalSort:
         ordered = topological_sort(basic_pipeline.steps, from_step="heatmap")
         ids = [s.id for s in ordered]
         assert "heatmap" in ids
-        # quality and profile should be excluded (they come before heatmap)
-        # Actually profile is before heatmap, but heatmap depends on profile
-        # from_step includes from that step onwards in topo order
+        # quality is unrelated to heatmap, so it should be excluded
+        assert "quality" not in ids
+        # profile is not a dependent of heatmap, so it's excluded too
+        assert "profile" not in ids
 
     def test_from_step_invalid(self, basic_pipeline: PipelineDefinition) -> None:
         with pytest.raises(ValueError, match="not found"):
@@ -314,7 +316,7 @@ class TestTemplates:
 
 
 # ---------------------------------------------------------------------------
-# Executor tests (dry-run only to avoid subprocess)
+# Executor tests (mostly dry-run; real execution requires uv)
 # ---------------------------------------------------------------------------
 
 
@@ -369,10 +371,14 @@ class TestExecutor:
         result = execute_pipeline(pipeline, {}, dry_run=True)
         assert result.status == "dry-run"
 
+    @pytest.mark.skipif(
+        not shutil.which("uv"),
+        reason="uv not available",
+    )
     def test_real_execution(
         self, basic_pipeline: PipelineDefinition, sample_csv: Path, tmp_path: Path
     ) -> None:
-        """Test actual execution with a simple pipeline."""
+        """Integration test: actual execution via subprocess (requires uv)."""
         pipeline = PipelineDefinition(
             name="real-test",
             output_dir=str(tmp_path / "output"),

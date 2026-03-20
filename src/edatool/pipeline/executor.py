@@ -48,10 +48,11 @@ def _build_command(
     for key, value in resolved_params.items():
         cmd.extend([f"--{key}", value])
 
-    # Add output
+    # Add output (ensure parent dirs exist)
     if step.output:
-        output_path = str(ctx.output_dir / ctx.resolve(step.output))
-        cmd.extend(["-o", output_path])
+        output_path_obj = ctx.output_dir / ctx.resolve(step.output)
+        output_path_obj.parent.mkdir(parents=True, exist_ok=True)
+        cmd.extend(["-o", str(output_path_obj)])
 
     return cmd
 
