@@ -187,9 +187,9 @@ class DatasetEntry:
 def generate_id(name: str) -> str:
     """Generate a dataset ID from a name or file path."""
     import re
+    from pathlib import PurePath
 
-    # Strip path and extension, keep alphanumeric + underscores
-    base = name.rsplit("/", 1)[-1].rsplit(".", 1)[0]
+    base = PurePath(name).stem
     clean = re.sub(r"[^a-zA-Z0-9_]", "_", base)
     clean = re.sub(r"_+", "_", clean).strip("_").lower()
     return clean or "dataset"

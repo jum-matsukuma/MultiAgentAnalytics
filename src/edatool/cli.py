@@ -273,15 +273,17 @@ def recipe_run_cmd(
 @catalog_app.command(name="register")
 def catalog_register_cmd(
     file: str = typer.Argument(..., help="Path to the data file."),
-    name: str = typer.Option("", "--name", help="Display name for the dataset."),
+    name: str = typer.Option("", "--name", help="Name used to derive the dataset ID."),
     description: str = typer.Option("", "--description", "-d", help="Description."),
-    tags: str = typer.Option("", "--tags", help="Comma-separated tags."),
+    tags: str | None = typer.Option(None, "--tags", help="Comma-separated tags."),
     catalog_dir: str = typer.Option("./catalog", "--catalog-dir", help="Catalog dir."),
 ) -> None:
     """Register a dataset in the catalog."""
     from edatool.catalog.store import Catalog
 
-    tag_list = [t.strip() for t in tags.split(",") if t.strip()] if tags else []
+    tag_list = (
+        [t.strip() for t in tags.split(",") if t.strip()] if tags is not None else None
+    )
     catalog = Catalog(catalog_dir)
     entry = catalog.register(file, name=name, description=description, tags=tag_list)
     typer.echo(f"Registered dataset '{entry.id}' ({entry.rows:,} rows)")
@@ -290,7 +292,10 @@ def catalog_register_cmd(
 @catalog_app.command(name="list")
 def catalog_list_cmd(
     sort_by: str = typer.Option(
-        "registered_at", "--sort-by", help="Sort by: registered_at or last_analyzed."
+        "registered_at",
+        "--sort-by",
+        help="Sort by: registered_at or last_analyzed.",
+        click_type=click.Choice(["registered_at", "last_analyzed"]),
     ),
     limit: int = typer.Option(0, "--limit", help="Max entries (0 = all)."),
     catalog_dir: str = typer.Option("./catalog", "--catalog-dir", help="Catalog dir."),

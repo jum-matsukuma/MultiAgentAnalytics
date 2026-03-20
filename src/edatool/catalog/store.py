@@ -27,7 +27,7 @@ def _file_hash(path: Path, chunk_size: int = 65536) -> str:
             if not chunk:
                 break
             h.update(chunk)
-    return f"sha256:{h.hexdigest()[:16]}"
+    return f"sha256:{h.hexdigest()}"
 
 
 def _extract_schema(df: pl.DataFrame) -> list[ColumnSchema]:
@@ -51,7 +51,7 @@ def _extract_quality(df: pl.DataFrame) -> QualitySnapshot:
     total_nulls = sum(df[col].null_count() for col in df.columns)
     total_cells = total * df.width
     missing_rate = total_nulls / total_cells if total_cells > 0 else 0.0
-    duplicate_rows = total - df.unique().height
+    duplicate_rows = int(df.is_duplicated().sum())
 
     issues: list[str] = []
     for col in df.columns:
@@ -181,9 +181,10 @@ class Catalog:
         self._load()
         results: list[DatasetEntry] = []
         query_lower = query.lower()
+        tag_lower = tag.lower() if tag else ""
 
         for entry in self._entries.values():
-            if tag and tag not in entry.tags:
+            if tag_lower and all(t.lower() != tag_lower for t in entry.tags):
                 continue
             if query_lower:
                 searchable = " ".join(
