@@ -21,6 +21,8 @@ recipe_app = typer.Typer(help="Reusable analysis recipes")
 app.add_typer(recipe_app, name="recipe")
 catalog_app = typer.Typer(help="Data catalog and analysis history")
 app.add_typer(catalog_app, name="catalog")
+pipeline_app = typer.Typer(help="Analysis pipeline management")
+app.add_typer(pipeline_app, name="pipeline")
 
 _FORMAT_HELP = "Output format: 'markdown' or 'json'."
 _FORMAT_CHOICE = typer.Option(
@@ -417,6 +419,121 @@ def catalog_freshness_cmd(
     for dataset_id, status in results:
         icon = {"ok": "ok", "changed": "CHANGED", "missing": "MISSING"}
         typer.echo(f"  [{icon.get(status, status)}] {dataset_id}")
+
+
+# ---------------------------------------------------------------------------
+# pipeline commands
+# ---------------------------------------------------------------------------
+
+_PIPELINES_DIR = "pipelines"
+
+
+@pipeline_app.command(name="list")
+def pipeline_list_cmd(
+    pipelines_dir: str = typer.Option(
+        _PIPELINES_DIR, "--dir", help="Directory containing pipeline files."
+    ),
+) -> None:
+    """List available pipeline definitions."""
+    from pathlib import Path as _Path
+
+    pdir = _Path(pipelines_dir)
+    if not pdir.exists():
+        typer.echo("No pipelines directory found.")
+        return
+
+    files = sorted(pdir.glob("*.json"))
+    if not files:
+        typer.echo("No pipeline files found.")
+        return
+
+    typer.echo("| File | Name |")
+    typer.echo("|------|------|")
+    for f in files:
+        import json as _json
+
+        try:
+            data = _json.loads(f.read_text(encoding="utf-8"))
+            name = data.get("name", f.stem)
+        except Exception:
+            name = f.stem
+        typer.echo(f"| {f.name} | {name} |")
+
+
+@pipeline_app.command(name="info")
+def pipeline_info_cmd(
+    file: str = typer.Argument(..., help="Path to pipeline JSON file."),
+) -> None:
+    """Show detailed info about a pipeline."""
+    from edatool.pipeline.parser import load_pipeline
+
+    pipeline = load_pipeline(file)
+    typer.echo(pipeline.to_markdown())
+
+
+@pipeline_app.command(name="run")
+def pipeline_run_cmd(
+    file: str = typer.Argument(..., help="Path to pipeline JSON file."),
+    param: list[str] | None = typer.Option(
+        None, "--param", "-p", help="Parameters as key=value pairs."
+    ),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Show plan without executing."
+    ),
+    from_step: str | None = typer.Option(
+        None, "--from-step", help="Start from this step ID."
+    ),
+) -> None:
+    """Run a pipeline."""
+    from edatool.pipeline.executor import execute_pipeline
+    from edatool.pipeline.parser import load_pipeline
+
+    pipeline = load_pipeline(file)
+
+    params: dict[str, str] = {}
+    if param:
+        for p in param:
+            if "=" not in p:
+                typer.echo(
+                    f"Invalid parameter format: '{p}'. Use key=value.",
+                    err=True,
+                )
+                raise typer.Exit(code=1)
+            key, value = p.split("=", 1)
+            params[key] = value
+
+    result = execute_pipeline(pipeline, params, dry_run=dry_run, from_step=from_step)
+    typer.echo(result.to_markdown())
+
+    if result.status == "failed":
+        raise typer.Exit(code=1)
+
+
+@pipeline_app.command(name="init")
+def pipeline_init_cmd(
+    template: str = typer.Option(
+        ...,
+        "--template",
+        "-t",
+        help="Template name.",
+        click_type=click.Choice(["basic-eda", "quality-monitor"]),
+    ),
+    output: str = typer.Option(
+        ..., "--output", "-o", help="Output file path for the pipeline JSON."
+    ),
+) -> None:
+    """Create a new pipeline from a built-in template."""
+    from edatool.pipeline.templates import render_template
+
+    if render_template(template, output):
+        typer.echo(f"Created pipeline from '{template}' template: {output}")
+    else:
+        typer.echo(f"Template '{template}' not found.", err=True)
+        from edatool.pipeline.templates import list_templates
+
+        available = [t["name"] for t in list_templates()]
+        typer.echo(f"Available templates: {', '.join(available)}", err=True)
+        raise typer.Exit(code=1)
 
 
 if __name__ == "__main__":
