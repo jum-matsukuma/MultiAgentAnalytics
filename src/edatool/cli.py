@@ -232,11 +232,28 @@ def recipe_run_cmd(
     parsed_params: dict[str, object] = {}
     param_types = {rp.name: rp.type for rp in recipe.parameters}
     for key, value in params.items():
-        if param_types.get(key) == "float":
-            parsed_params[key] = float(value)
-        elif param_types.get(key) == "int":
-            parsed_params[key] = int(value)
-        elif param_types.get(key) == "bool":
+        expected_type = param_types.get(key)
+        if expected_type == "float":
+            try:
+                parsed_params[key] = float(value)
+            except ValueError:
+                typer.echo(
+                    f"Invalid value for parameter '{key}': "
+                    f"expected float, got '{value}'.",
+                    err=True,
+                )
+                raise typer.Exit(code=1)
+        elif expected_type == "int":
+            try:
+                parsed_params[key] = int(value)
+            except ValueError:
+                typer.echo(
+                    f"Invalid value for parameter '{key}': "
+                    f"expected int, got '{value}'.",
+                    err=True,
+                )
+                raise typer.Exit(code=1)
+        elif expected_type == "bool":
             parsed_params[key] = value.lower() in ("true", "1", "yes")
         else:
             parsed_params[key] = value

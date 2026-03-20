@@ -201,7 +201,7 @@ class ABTestRecipe(RecipeBase):
         "and confidence intervals. Supports both continuous metrics (t-test) "
         "and binary metrics (proportion z-test)."
     )
-    parameters = [
+    parameters = (
         Parameter(
             name="group",
             description="Column that identifies A/B groups",
@@ -236,7 +236,7 @@ class ABTestRecipe(RecipeBase):
             required=False,
             default=0.05,
         ),
-    ]
+    )
 
     def validate(self, df: pl.DataFrame, **params: Any) -> ValidationResult:
         errors: list[str] = []
@@ -281,10 +281,12 @@ class ABTestRecipe(RecipeBase):
         if errors:
             return ValidationResult(valid=False, errors=errors)
 
-        # Check metric is numeric
-        if not is_numeric(df[metric].dtype):
+        # Check metric is numeric or boolean (for binary metrics)
+        metric_dtype = df[metric].dtype
+        if not (is_numeric(metric_dtype) or metric_dtype == pl.Boolean):
             errors.append(
-                f"Metric column '{metric}' must be numeric, got {df[metric].dtype}"
+                f"Metric column '{metric}' must be numeric or boolean, "
+                f"got {metric_dtype}"
             )
 
         # Check sample sizes
@@ -329,11 +331,36 @@ class ABTestRecipe(RecipeBase):
         control_df = df.filter(pl.col(group).cast(pl.Utf8) == control)
         treatment_df = df.filter(pl.col(group).cast(pl.Utf8) == treatment)
 
-        control_vals = control_df[metric].drop_nulls().to_list()
-        treatment_vals = treatment_df[metric].drop_nulls().to_list()
+        # Cast boolean to int if needed
+        metric_dtype = control_df[metric].dtype
+        if metric_dtype == pl.Boolean:
+            control_vals = control_df[metric].cast(pl.Int8).drop_nulls().to_list()
+            treatment_vals = treatment_df[metric].cast(pl.Int8).drop_nulls().to_list()
+        else:
+            control_vals = control_df[metric].drop_nulls().to_list()
+            treatment_vals = treatment_df[metric].drop_nulls().to_list()
 
         n_control = len(control_vals)
         n_treatment = len(treatment_vals)
+
+        # Guard against all-null groups after drop_nulls
+        if n_control < 2 or n_treatment < 2:
+            error_messages: list[str] = []
+            if n_control < 2:
+                error_messages.append(
+                    f"Control group '{control}' has fewer than 2 "
+                    f"non-null values for metric '{metric}'."
+                )
+            if n_treatment < 2:
+                error_messages.append(
+                    f"Treatment group '{treatment}' has fewer than 2 "
+                    f"non-null values for metric '{metric}'."
+                )
+            return RecipeResult(
+                recipe_name=self.name,
+                sections={"Validation Failed": error_messages},
+            )
+
         mean_control = sum(control_vals) / n_control
         mean_treatment = sum(treatment_vals) / n_treatment
 
@@ -341,6 +368,7 @@ class ABTestRecipe(RecipeBase):
         all_values = set(control_vals + treatment_vals)
         is_binary = all_values <= {0, 1, 0.0, 1.0}
 
+        # Compute statistics with treatment-control direction throughout
         if is_binary:
             successes_c = sum(1 for v in control_vals if v == 1 or v == 1.0)
             successes_t = sum(1 for v in treatment_vals if v == 1 or v == 1.0)
@@ -349,12 +377,14 @@ class ABTestRecipe(RecipeBase):
             )
             test_name = "Two-proportion z-test"
         else:
-            test_stat, p_value = _t_test(control_vals, treatment_vals)
+            # Pass treatment first so t-stat sign = treatment - control
+            test_stat, p_value = _t_test(treatment_vals, control_vals)
             test_name = "Welch's t-test"
 
-        effect_d = _cohens_d(control_vals, treatment_vals)
+        # Cohen's d: treatment - control direction
+        effect_d = _cohens_d(treatment_vals, control_vals)
         diff, ci_lower, ci_upper = _confidence_interval(
-            control_vals, treatment_vals, confidence
+            treatment_vals, control_vals, confidence
         )
 
         significant = p_value < alpha

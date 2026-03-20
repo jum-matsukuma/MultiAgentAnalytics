@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, ClassVar
 
 import polars as pl
 
@@ -60,10 +60,20 @@ class RecipeResult:
     visualizations: list[VizSpec] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        result: dict[str, Any] = {
             "recipe": self.recipe_name,
             "sections": self.sections,
         }
+        if self.visualizations:
+            result["visualizations"] = [
+                {
+                    "chart_type": v.chart_type,
+                    "params": v.params,
+                    "description": v.description,
+                }
+                for v in self.visualizations
+            ]
+        return result
 
     def to_markdown(self) -> str:
         lines: list[str] = []
@@ -95,7 +105,7 @@ class RecipeBase(ABC):
 
     name: str = ""
     description: str = ""
-    parameters: list[Parameter] = []
+    parameters: ClassVar[tuple[Parameter, ...]] = ()
 
     @abstractmethod
     def validate(self, df: pl.DataFrame, **params: Any) -> ValidationResult:

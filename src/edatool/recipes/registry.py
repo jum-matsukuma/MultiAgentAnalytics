@@ -5,10 +5,12 @@ from __future__ import annotations
 from edatool.recipes.base import RecipeBase
 
 _REGISTRY: dict[str, RecipeBase] = {}
+_BUILTINS_LOADED: bool = False
 
 
 def register_recipe(recipe: RecipeBase) -> None:
     """Register a recipe instance in the global registry."""
+    _ensure_loaded()
     _REGISTRY[recipe.name] = recipe
 
 
@@ -26,8 +28,10 @@ def list_recipes() -> list[RecipeBase]:
 
 def _ensure_loaded() -> None:
     """Lazy-load built-in recipes on first access."""
-    if _REGISTRY:
+    global _BUILTINS_LOADED
+    if _BUILTINS_LOADED:
         return
+    _BUILTINS_LOADED = True
     from edatool.recipes.ab_test import ABTestRecipe
 
-    register_recipe(ABTestRecipe())
+    _REGISTRY.setdefault(ABTestRecipe.name, ABTestRecipe())
