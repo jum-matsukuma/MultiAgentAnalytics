@@ -1,6 +1,6 @@
 """edatool - Multi-agent data analysis platform for Claude Code."""
 
-from edatool import catalog, recipes
+from edatool import catalog, pipeline, recipes
 from edatool import viz as plot
 from edatool.analysis.correlation import correlations
 from edatool.analysis.profiler import profile
@@ -15,6 +15,7 @@ __all__ = [
     "correlations",
     "quality_check",
     "catalog",
+    "pipeline",
     "plot",
     "recipes",
 ]
