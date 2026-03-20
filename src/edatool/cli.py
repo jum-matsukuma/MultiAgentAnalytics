@@ -3,29 +3,33 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
 
 import click
 import typer
 
-from edatool.io.loader import load
-from edatool.analysis.stats import summarize
-from edatool.analysis.profiler import profile
 from edatool.analysis.correlation import correlations
+from edatool.analysis.profiler import profile
 from edatool.analysis.quality import quality_check
+from edatool.analysis.stats import summarize
+from edatool.io.loader import load
 from edatool.reporting.markdown import report_to_markdown
 
 app = typer.Typer(help="edatool - Multi-agent data analysis platform")
 plot_app = typer.Typer(help="Visualization commands")
 app.add_typer(plot_app, name="plot")
+recipe_app = typer.Typer(help="Reusable analysis recipes")
+app.add_typer(recipe_app, name="recipe")
 
 _FORMAT_HELP = "Output format: 'markdown' or 'json'."
 _FORMAT_CHOICE = typer.Option(
-    "markdown", "--format", help=_FORMAT_HELP, click_type=click.Choice(["markdown", "json"])
+    "markdown",
+    "--format",
+    help=_FORMAT_HELP,
+    click_type=click.Choice(["markdown", "json"]),
 )
 
 
-def _output_result(text: str, output_file: Optional[Path]) -> None:
+def _output_result(text: str, output_file: Path | None) -> None:
     """Print text to stdout or save to file."""
     if output_file is not None:
         output_file.write_text(text, encoding="utf-8")
@@ -36,6 +40,7 @@ def _output_result(text: str, output_file: Optional[Path]) -> None:
 
 def _to_json(obj: object) -> str:
     import json
+
     return json.dumps(obj.to_dict(), ensure_ascii=False, indent=2)  # type: ignore[union-attr]
 
 
@@ -43,7 +48,7 @@ def _to_json(obj: object) -> str:
 def summarize_cmd(
     file: str = typer.Argument(..., help="Path to the data file."),
     output_format: str = _FORMAT_CHOICE,
-    output: Optional[Path] = typer.Option(None, "-o", help="Save output to file."),
+    output: Path | None = typer.Option(None, "-o", help="Save output to file."),
 ) -> None:
     """Quick summary of a dataset (schema + basic statistics)."""
     df = load(file)
@@ -56,7 +61,7 @@ def summarize_cmd(
 def profile_cmd(
     file: str = typer.Argument(..., help="Path to the data file."),
     output_format: str = _FORMAT_CHOICE,
-    output: Optional[Path] = typer.Option(None, "-o", help="Save output to file."),
+    output: Path | None = typer.Option(None, "-o", help="Save output to file."),
 ) -> None:
     """Full profile report (stats + correlations + quality check)."""
     df = load(file)
@@ -68,10 +73,10 @@ def profile_cmd(
 @app.command(name="correlations")
 def correlations_cmd(
     file: str = typer.Argument(..., help="Path to the data file."),
-    target: Optional[str] = typer.Option(None, "--target", help="Target column name."),
+    target: str | None = typer.Option(None, "--target", help="Target column name."),
     threshold: float = typer.Option(0.8, "--threshold", help="Correlation threshold."),
     output_format: str = _FORMAT_CHOICE,
-    output: Optional[Path] = typer.Option(None, "-o", help="Save output to file."),
+    output: Path | None = typer.Option(None, "-o", help="Save output to file."),
 ) -> None:
     """Compute correlation matrix for numeric columns."""
     df = load(file)
@@ -84,7 +89,7 @@ def correlations_cmd(
 def quality_check_cmd(
     file: str = typer.Argument(..., help="Path to the data file."),
     output_format: str = _FORMAT_CHOICE,
-    output: Optional[Path] = typer.Option(None, "-o", help="Save output to file."),
+    output: Path | None = typer.Option(None, "-o", help="Save output to file."),
 ) -> None:
     """Run data quality checks (missing values, duplicates, cardinality)."""
     df = load(file)
@@ -97,7 +102,7 @@ def quality_check_cmd(
 def plot_histogram(
     file: str = typer.Argument(..., help="Path to the data file."),
     column: str = typer.Option(..., "--column", help="Column to plot."),
-    output: Optional[str] = typer.Option(None, "-o", help="Output image path."),
+    output: str | None = typer.Option(None, "-o", help="Output image path."),
     bins: int = typer.Option(30, "--bins", help="Number of histogram bins."),
 ) -> None:
     """Create a histogram for a column."""
@@ -117,8 +122,10 @@ def plot_scatter(
     file: str = typer.Argument(..., help="Path to the data file."),
     x: str = typer.Option(..., "--x", help="Column for the x-axis."),
     y: str = typer.Option(..., "--y", help="Column for the y-axis."),
-    output: Optional[str] = typer.Option(None, "-o", help="Output image path."),
-    color: Optional[str] = typer.Option(None, "--color", help="Column for color grouping."),
+    output: str | None = typer.Option(None, "-o", help="Output image path."),
+    color: str | None = typer.Option(
+        None, "--color", help="Column for color grouping."
+    ),
 ) -> None:
     """Create a scatter plot for two columns."""
     from edatool.viz.scatter import scatter
@@ -135,7 +142,7 @@ def plot_scatter(
 @plot_app.command(name="heatmap")
 def plot_heatmap(
     file: str = typer.Argument(..., help="Path to the data file."),
-    output: Optional[str] = typer.Option(None, "-o", help="Output image path."),
+    output: str | None = typer.Option(None, "-o", help="Output image path."),
 ) -> None:
     """Create a correlation heatmap for numeric columns."""
     from edatool.viz.heatmap import heatmap
@@ -147,6 +154,113 @@ def plot_heatmap(
         typer.echo(f"Saved to {path}")
     else:
         typer.echo("No output path specified; figure was not saved.")
+
+
+@recipe_app.command(name="list")
+def recipe_list_cmd() -> None:
+    """List all available analysis recipes."""
+    from edatool.recipes.registry import list_recipes
+
+    recipes = list_recipes()
+    if not recipes:
+        typer.echo("No recipes available.")
+        return
+
+    typer.echo("## Available Recipes\n")
+    typer.echo("| Name | Description |")
+    typer.echo("|------|-------------|")
+    for r in recipes:
+        typer.echo(f"| {r.name} | {r.description} |")
+
+
+@recipe_app.command(name="info")
+def recipe_info_cmd(
+    name: str = typer.Argument(..., help="Recipe name."),
+) -> None:
+    """Show detailed information about a recipe."""
+    from edatool.recipes.registry import get_recipe
+
+    recipe = get_recipe(name)
+    if recipe is None:
+        typer.echo(f"Recipe '{name}' not found.", err=True)
+        raise typer.Exit(code=1)
+
+    typer.echo(f"## {recipe.name}\n")
+    typer.echo(f"{recipe.description}\n")
+    typer.echo("### Parameters\n")
+    typer.echo("| Name | Type | Required | Default | Description |")
+    typer.echo("|------|------|----------|---------|-------------|")
+    for p in recipe.parameters:
+        default = p.default if p.default is not None else "-"
+        required = "Yes" if p.required else "No"
+        typer.echo(
+            f"| {p.name} | {p.type} | {required} | {default} | {p.description} |"
+        )
+
+
+@recipe_app.command(name="run")
+def recipe_run_cmd(
+    name: str = typer.Argument(..., help="Recipe name."),
+    file: str = typer.Argument(..., help="Path to the data file."),
+    param: list[str] | None = typer.Option(
+        None, "--param", "-p", help="Parameters as key=value pairs."
+    ),
+    output_format: str = _FORMAT_CHOICE,
+    output: Path | None = typer.Option(None, "-o", help="Save output to file."),
+) -> None:
+    """Run an analysis recipe on a dataset."""
+    from edatool.recipes.registry import get_recipe
+
+    recipe = get_recipe(name)
+    if recipe is None:
+        typer.echo(f"Recipe '{name}' not found.", err=True)
+        raise typer.Exit(code=1)
+
+    df = load(file)
+
+    # Parse key=value params
+    params: dict[str, str] = {}
+    if param:
+        for p in param:
+            if "=" not in p:
+                typer.echo(f"Invalid parameter format: '{p}'. Use key=value.", err=True)
+                raise typer.Exit(code=1)
+            key, value = p.split("=", 1)
+            params[key] = value
+
+    # Convert numeric params
+    parsed_params: dict[str, object] = {}
+    param_types = {rp.name: rp.type for rp in recipe.parameters}
+    for key, value in params.items():
+        expected_type = param_types.get(key)
+        if expected_type == "float":
+            try:
+                parsed_params[key] = float(value)
+            except ValueError:
+                typer.echo(
+                    f"Invalid value for parameter '{key}': "
+                    f"expected float, got '{value}'.",
+                    err=True,
+                )
+                raise typer.Exit(code=1)
+        elif expected_type == "int":
+            try:
+                parsed_params[key] = int(value)
+            except ValueError:
+                typer.echo(
+                    f"Invalid value for parameter '{key}': "
+                    f"expected int, got '{value}'.",
+                    err=True,
+                )
+                raise typer.Exit(code=1)
+        elif expected_type == "bool":
+            parsed_params[key] = value.lower() in ("true", "1", "yes")
+        else:
+            parsed_params[key] = value
+
+    result = recipe.run(df, **parsed_params)
+    text = result.to_json() if output_format == "json" else result.to_markdown()
+    _output_result(text, output)
 
 
 if __name__ == "__main__":
