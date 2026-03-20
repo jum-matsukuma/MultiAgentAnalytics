@@ -19,6 +19,8 @@ plot_app = typer.Typer(help="Visualization commands")
 app.add_typer(plot_app, name="plot")
 recipe_app = typer.Typer(help="Reusable analysis recipes")
 app.add_typer(recipe_app, name="recipe")
+catalog_app = typer.Typer(help="Data catalog and analysis history")
+app.add_typer(catalog_app, name="catalog")
 
 _FORMAT_HELP = "Output format: 'markdown' or 'json'."
 _FORMAT_CHOICE = typer.Option(
@@ -261,6 +263,160 @@ def recipe_run_cmd(
     result = recipe.run(df, **parsed_params)
     text = result.to_json() if output_format == "json" else result.to_markdown()
     _output_result(text, output)
+
+
+# ---------------------------------------------------------------------------
+# catalog commands
+# ---------------------------------------------------------------------------
+
+
+@catalog_app.command(name="register")
+def catalog_register_cmd(
+    file: str = typer.Argument(..., help="Path to the data file."),
+    name: str = typer.Option("", "--name", help="Name used to derive the dataset ID."),
+    description: str = typer.Option("", "--description", "-d", help="Description."),
+    tags: str | None = typer.Option(None, "--tags", help="Comma-separated tags."),
+    catalog_dir: str = typer.Option("./catalog", "--catalog-dir", help="Catalog dir."),
+) -> None:
+    """Register a dataset in the catalog."""
+    from edatool.catalog.store import Catalog
+
+    tag_list = (
+        [t.strip() for t in tags.split(",") if t.strip()] if tags is not None else None
+    )
+    catalog = Catalog(catalog_dir)
+    entry = catalog.register(file, name=name, description=description, tags=tag_list)
+    typer.echo(f"Registered dataset '{entry.id}' ({entry.rows:,} rows)")
+
+
+@catalog_app.command(name="list")
+def catalog_list_cmd(
+    sort_by: str = typer.Option(
+        "registered_at",
+        "--sort-by",
+        help="Sort by: registered_at or last_analyzed.",
+        click_type=click.Choice(["registered_at", "last_analyzed"]),
+    ),
+    limit: int = typer.Option(0, "--limit", help="Max entries (0 = all)."),
+    catalog_dir: str = typer.Option("./catalog", "--catalog-dir", help="Catalog dir."),
+) -> None:
+    """List all registered datasets."""
+    from edatool.catalog.store import Catalog
+
+    catalog = Catalog(catalog_dir)
+    entries = catalog.list_datasets(sort_by=sort_by, limit=limit)
+    if not entries:
+        typer.echo("No datasets registered.")
+        return
+
+    typer.echo("| ID | Rows | Columns | Quality | Tags | Registered |")
+    typer.echo("|----|------|---------|---------|------|------------|")
+    for e in entries:
+        score = f"{e.quality.overall_score:.2f}" if e.quality else "-"
+        tags_str = ", ".join(e.tags) if e.tags else "-"
+        typer.echo(
+            f"| {e.id} | {e.rows:,} | {len(e.columns)} "
+            f"| {score} | {tags_str} | {e.registered_at} |"
+        )
+
+
+@catalog_app.command(name="search")
+def catalog_search_cmd(
+    query: str = typer.Argument("", help="Search keyword."),
+    tag: str = typer.Option("", "--tag", help="Filter by tag."),
+    catalog_dir: str = typer.Option("./catalog", "--catalog-dir", help="Catalog dir."),
+) -> None:
+    """Search datasets by keyword or tag."""
+    from edatool.catalog.store import Catalog
+
+    catalog = Catalog(catalog_dir)
+    results = catalog.search(query, tag=tag)
+    if not results:
+        typer.echo("No datasets found.")
+        return
+
+    for e in results:
+        tags_str = f" [{', '.join(e.tags)}]" if e.tags else ""
+        typer.echo(f"- {e.id}: {e.description or e.source}{tags_str}")
+
+
+@catalog_app.command(name="show")
+def catalog_show_cmd(
+    dataset_id: str = typer.Argument(..., help="Dataset ID."),
+    catalog_dir: str = typer.Option("./catalog", "--catalog-dir", help="Catalog dir."),
+) -> None:
+    """Show detailed info about a dataset."""
+    from edatool.catalog.store import Catalog
+
+    catalog = Catalog(catalog_dir)
+    entry = catalog.get(dataset_id)
+    if entry is None:
+        typer.echo(f"Dataset '{dataset_id}' not found.", err=True)
+        raise typer.Exit(code=1)
+    typer.echo(entry.to_markdown())
+
+
+@catalog_app.command(name="compare")
+def catalog_compare_cmd(
+    id_a: str = typer.Argument(..., help="First dataset ID."),
+    id_b: str = typer.Argument(..., help="Second dataset ID."),
+    catalog_dir: str = typer.Option("./catalog", "--catalog-dir", help="Catalog dir."),
+) -> None:
+    """Compare two datasets (schema + quality)."""
+    from edatool.catalog.store import Catalog
+
+    catalog = Catalog(catalog_dir)
+    report = catalog.compare(id_a, id_b)
+    typer.echo(report)
+
+
+@catalog_app.command(name="record")
+def catalog_record_cmd(
+    dataset_id: str = typer.Argument(..., help="Dataset ID."),
+    analysis_type: str = typer.Option(
+        ..., "--analysis-type", help="Type of analysis (profile, correlations, etc.)."
+    ),
+    report: str = typer.Option("", "--report", help="Path to the report file."),
+    findings: str = typer.Option(
+        "", "--findings", help="Comma-separated key findings."
+    ),
+    catalog_dir: str = typer.Option("./catalog", "--catalog-dir", help="Catalog dir."),
+) -> None:
+    """Record an analysis result for a dataset."""
+    from edatool.catalog.store import Catalog
+
+    finding_list = (
+        [f.strip() for f in findings.split(",") if f.strip()] if findings else []
+    )
+    catalog = Catalog(catalog_dir)
+    record = catalog.record_analysis(
+        dataset_id,
+        analysis_type=analysis_type,
+        report_path=report,
+        key_findings=finding_list,
+    )
+    if record is None:
+        typer.echo(f"Dataset '{dataset_id}' not found.", err=True)
+        raise typer.Exit(code=1)
+    typer.echo(f"Recorded {record.id} ({record.analysis_type}) for {dataset_id}")
+
+
+@catalog_app.command(name="check-freshness")
+def catalog_freshness_cmd(
+    catalog_dir: str = typer.Option("./catalog", "--catalog-dir", help="Catalog dir."),
+) -> None:
+    """Check if registered files have changed since registration."""
+    from edatool.catalog.store import Catalog
+
+    catalog = Catalog(catalog_dir)
+    results = catalog.check_freshness()
+    if not results:
+        typer.echo("No datasets registered.")
+        return
+
+    for dataset_id, status in results:
+        icon = {"ok": "ok", "changed": "CHANGED", "missing": "MISSING"}
+        typer.echo(f"  [{icon.get(status, status)}] {dataset_id}")
 
 
 if __name__ == "__main__":
