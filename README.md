@@ -133,18 +133,22 @@ Claude Codeの専門エージェントが協調してデータ分析を実行す
 
 ### 分析ワークフロー
 
-```
-domain-expert    data-analyst    visualizer    reporter
-     |                |              |            |
-     | 分析方針助言    |              |            |
-     |--------------->|              |            |
-     |                | プロファイル   |            |
-     |                | 品質チェック   |            |
-     |                | 相関分析      |            |
-     |                |------------->|            |
-     |                |              | 可視化     |
-     |                |              |----------->|
-     |                |              |            | レポート統合
+```mermaid
+sequenceDiagram
+    participant DE as domain-expert
+    participant DA as data-analyst
+    participant VZ as visualizer
+    participant RP as reporter
+
+    DE->>DA: 分析方針を助言
+    DA->>DA: プロファイリング
+    DA->>DA: 品質チェック
+    DA->>DA: 相関分析
+    DA->>VZ: 重要な知見を共有
+    VZ->>VZ: グラフ・チャート生成
+    VZ->>RP: 可視化結果を共有
+    DA->>RP: 分析結果を共有
+    RP->>RP: レポート統合・整形
 ```
 
 ### 汎用エージェント
