@@ -32,6 +32,7 @@ Type a slash command or natural language. Four specialized agents collaborate au
 graph TD
     A["domain-expert"] -->|advise| B["data-analyst"]
     A -->|advise| C["visualizer"]
+    B -->|findings| C
     B -->|findings| D["reporter"]
     C -->|plots| D
     style A fill:#bb9af7,color:#1a1b26,stroke:none
