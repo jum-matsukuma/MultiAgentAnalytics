@@ -1,38 +1,39 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 840 520" width="840" height="520">
   <style>
+    /* 20s total: type 5-15%, output 18-72%, hold 72-100% */
     @keyframes typeLine1 {
-      0%, 8% { width: 0 }
-      18% { width: 370px }
-      100% { width: 370px }
+      0%, 5% { width: 0 }
+      15% { width: 400px }
+      100% { width: 400px }
     }
     @keyframes cursor {
       0%, 49% { opacity: 1 }
       50%, 100% { opacity: 0 }
     }
     @keyframes showCursor1 {
-      0%, 8% { opacity: 1 }
-      18.1% { opacity: 0 }
+      0%, 5% { opacity: 1 }
+      15.5% { opacity: 0 }
       100% { opacity: 0 }
     }
-    @keyframes fadeIn1 { 0%, 20% { opacity: 0 } 22% { opacity: 1 } 100% { opacity: 1 } }
-    @keyframes fadeIn2 { 0%, 24% { opacity: 0 } 26% { opacity: 1 } 100% { opacity: 1 } }
-    @keyframes fadeIn3 { 0%, 28% { opacity: 0 } 30% { opacity: 1 } 100% { opacity: 1 } }
-    @keyframes fadeIn4 { 0%, 32% { opacity: 0 } 34% { opacity: 1 } 100% { opacity: 1 } }
-    @keyframes fadeIn5 { 0%, 36% { opacity: 0 } 38% { opacity: 1 } 100% { opacity: 1 } }
-    @keyframes fadeIn6 { 0%, 40% { opacity: 0 } 42% { opacity: 1 } 100% { opacity: 1 } }
-    @keyframes fadeIn7 { 0%, 44% { opacity: 0 } 46% { opacity: 1 } 100% { opacity: 1 } }
-    @keyframes fadeIn8 { 0%, 48% { opacity: 0 } 50% { opacity: 1 } 100% { opacity: 1 } }
-    @keyframes fadeIn9 { 0%, 52% { opacity: 0 } 54% { opacity: 1 } 100% { opacity: 1 } }
-    @keyframes fadeIn10 { 0%, 56% { opacity: 0 } 58% { opacity: 1 } 100% { opacity: 1 } }
-    @keyframes fadeIn11 { 0%, 60% { opacity: 0 } 62% { opacity: 1 } 100% { opacity: 1 } }
-    @keyframes fadeIn12 { 0%, 64% { opacity: 0 } 66% { opacity: 1 } 100% { opacity: 1 } }
-    @keyframes fadeIn13 { 0%, 68% { opacity: 0 } 70% { opacity: 1 } 100% { opacity: 1 } }
+    @keyframes fadeIn1  { 0%, 18% { opacity: 0 } 20% { opacity: 1 } 100% { opacity: 1 } }
+    @keyframes fadeIn2  { 0%, 23% { opacity: 0 } 25% { opacity: 1 } 100% { opacity: 1 } }
+    @keyframes fadeIn3  { 0%, 28% { opacity: 0 } 30% { opacity: 1 } 100% { opacity: 1 } }
+    @keyframes fadeIn4  { 0%, 34% { opacity: 0 } 36% { opacity: 1 } 100% { opacity: 1 } }
+    @keyframes fadeIn5  { 0%, 39% { opacity: 0 } 41% { opacity: 1 } 100% { opacity: 1 } }
+    @keyframes fadeIn6  { 0%, 44% { opacity: 0 } 46% { opacity: 1 } 100% { opacity: 1 } }
+    @keyframes fadeIn7  { 0%, 50% { opacity: 0 } 52% { opacity: 1 } 100% { opacity: 1 } }
+    @keyframes fadeIn8  { 0%, 55% { opacity: 0 } 57% { opacity: 1 } 100% { opacity: 1 } }
+    @keyframes fadeIn9  { 0%, 58% { opacity: 0 } 60% { opacity: 1 } 100% { opacity: 1 } }
+    @keyframes fadeIn10 { 0%, 63% { opacity: 0 } 65% { opacity: 1 } 100% { opacity: 1 } }
+    @keyframes fadeIn11 { 0%, 66% { opacity: 0 } 68% { opacity: 1 } 100% { opacity: 1 } }
     @keyframes progressBar {
-      0%, 70% { width: 0 }
-      90% { width: 280px }
+      0%, 68% { width: 0 }
+      78% { width: 280px }
       100% { width: 280px }
     }
-    @keyframes fadeIn14 { 0%, 92% { opacity: 0 } 94% { opacity: 1 } 100% { opacity: 1 } }
+    @keyframes fadeIn12 { 0%, 78% { opacity: 0 } 80% { opacity: 1 } 100% { opacity: 1 } }
+    @keyframes fadeIn13 { 0%, 80% { opacity: 0 } 82% { opacity: 1 } 100% { opacity: 1 } }
+    /* hold from 82% to 100% = 3.6s static */
 
     .term-bg { fill: #1a1b26; rx: 10; ry: 10; }
     .titlebar { fill: #24283b; }
@@ -46,16 +47,14 @@
     .success { fill: #9ece6a; font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace; font-size: 13px; }
     .dim { fill: #565f89; font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace; font-size: 13px; }
     .accent { fill: #7dcfff; font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace; font-size: 13px; }
-    .warn { fill: #e0af68; font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace; font-size: 13px; }
   </style>
 
-  <!-- Drop shadow -->
   <defs>
     <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
       <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000" flood-opacity="0.3"/>
     </filter>
     <clipPath id="cmd-clip">
-      <rect x="146" y="46" width="0" height="22" style="animation: typeLine1 12s ease-in-out infinite"/>
+      <rect x="48" y="52" width="0" height="30" style="animation: typeLine1 20s ease-in-out infinite"/>
     </clipPath>
   </defs>
 
@@ -79,88 +78,92 @@
 
   <!-- Blinking cursor -->
   <rect x="52" y="58" width="9" height="18" fill="#c0caf5" opacity="0"
-        style="animation: showCursor1 12s ease-in-out infinite, cursor 0.8s step-end infinite"/>
+        style="animation: showCursor1 20s ease-in-out infinite, cursor 0.8s step-end infinite"/>
 
-  <!-- Output lines with staggered fade-in -->
-  <g style="animation: fadeIn1 12s ease-in-out infinite; opacity: 0">
+  <!-- Phase 1 -->
+  <g style="animation: fadeIn1 20s ease-in-out infinite; opacity: 0">
     <text class="dim" x="36" y="104">Phase 1</text>
     <text class="highlight" x="108" y="104">domain-expert</text>
     <text class="output" x="244" y="104">analyzing data structure...</text>
   </g>
 
-  <g style="animation: fadeIn2 12s ease-in-out infinite; opacity: 0">
-    <text class="success" x="52" y="124">&#x2713;</text>
-    <text class="output" x="72" y="124">Domain: Passenger survival prediction (Titanic)</text>
+  <g style="animation: fadeIn2 20s ease-in-out infinite; opacity: 0">
+    <text class="success" x="52" y="126">&#x2713;</text>
+    <text class="output" x="72" y="126">Domain: Passenger survival prediction (Titanic)</text>
   </g>
 
-  <g style="animation: fadeIn3 12s ease-in-out infinite; opacity: 0">
-    <text class="success" x="52" y="144">&#x2713;</text>
-    <text class="output" x="72" y="144">Target variable: Survived | Key features: Pclass, Sex, Age</text>
+  <g style="animation: fadeIn3 20s ease-in-out infinite; opacity: 0">
+    <text class="success" x="52" y="148">&#x2713;</text>
+    <text class="output" x="72" y="148">Target variable: Survived | Key features: Pclass, Sex, Age</text>
   </g>
 
-  <g style="animation: fadeIn4 12s ease-in-out infinite; opacity: 0">
-    <text class="dim" x="36" y="172">Phase 2</text>
-    <text class="highlight" x="108" y="172">data-analyst</text>
-    <text class="output" x="228" y="172">running full profile...</text>
+  <!-- Phase 2 -->
+  <g style="animation: fadeIn4 20s ease-in-out infinite; opacity: 0">
+    <text class="dim" x="36" y="178">Phase 2</text>
+    <text class="highlight" x="108" y="178">data-analyst</text>
+    <text class="output" x="228" y="178">running full profile...</text>
   </g>
 
-  <g style="animation: fadeIn5 12s ease-in-out infinite; opacity: 0">
-    <text class="success" x="52" y="192">&#x2713;</text>
-    <text class="output" x="72" y="192">891 rows x 12 cols | 19.9% missing in Age | 77.1% missing in Cabin</text>
+  <g style="animation: fadeIn5 20s ease-in-out infinite; opacity: 0">
+    <text class="success" x="52" y="200">&#x2713;</text>
+    <text class="output" x="72" y="200">891 rows x 12 cols | 19.9% missing in Age | 77.1% missing in Cabin</text>
   </g>
 
-  <g style="animation: fadeIn6 12s ease-in-out infinite; opacity: 0">
-    <text class="success" x="52" y="212">&#x2713;</text>
-    <text class="output" x="72" y="212">Pclass-Fare correlation: -0.67 | Survival rate: 48.5%</text>
+  <g style="animation: fadeIn6 20s ease-in-out infinite; opacity: 0">
+    <text class="success" x="52" y="222">&#x2713;</text>
+    <text class="output" x="72" y="222">Pclass-Fare correlation: -0.67 | Survival rate: 48.5%</text>
   </g>
 
-  <g style="animation: fadeIn7 12s ease-in-out infinite; opacity: 0">
-    <text class="dim" x="36" y="240">Phase 3</text>
-    <text class="highlight" x="108" y="240">visualizer</text>
-    <text class="output" x="212" y="240">generating plots...</text>
+  <!-- Phase 3 -->
+  <g style="animation: fadeIn7 20s ease-in-out infinite; opacity: 0">
+    <text class="dim" x="36" y="252">Phase 3</text>
+    <text class="highlight" x="108" y="252">visualizer</text>
+    <text class="output" x="212" y="252">generating plots...</text>
   </g>
 
-  <g style="animation: fadeIn8 12s ease-in-out infinite; opacity: 0">
-    <text class="accent" x="52" y="260">&#x25A0;</text>
-    <text class="output" x="72" y="260">plot_hist_age.png</text>
-    <text class="accent" x="240" y="260">&#x25A0;</text>
-    <text class="output" x="260" y="260">plot_scatter_age_fare.png</text>
+  <g style="animation: fadeIn8 20s ease-in-out infinite; opacity: 0">
+    <text class="accent" x="52" y="274">&#x25A0;</text>
+    <text class="output" x="72" y="274">plot_hist_age.png</text>
+    <text class="accent" x="252" y="274">&#x25A0;</text>
+    <text class="output" x="272" y="274">plot_scatter_age_fare.png</text>
   </g>
 
-  <g style="animation: fadeIn9 12s ease-in-out infinite; opacity: 0">
-    <text class="accent" x="52" y="280">&#x25A0;</text>
-    <text class="output" x="72" y="280">plot_heatmap.png</text>
-    <text class="accent" x="240" y="280">&#x25A0;</text>
-    <text class="output" x="260" y="280">plot_bar_survival.png</text>
+  <g style="animation: fadeIn9 20s ease-in-out infinite; opacity: 0">
+    <text class="accent" x="52" y="296">&#x25A0;</text>
+    <text class="output" x="72" y="296">plot_heatmap.png</text>
+    <text class="accent" x="252" y="296">&#x25A0;</text>
+    <text class="output" x="272" y="296">plot_bar_survival.png</text>
   </g>
 
-  <g style="animation: fadeIn10 12s ease-in-out infinite; opacity: 0">
-    <text class="dim" x="36" y="308">Phase 4</text>
-    <text class="highlight" x="108" y="308">reporter</text>
-    <text class="output" x="196" y="308">integrating results...</text>
+  <!-- Phase 4 -->
+  <g style="animation: fadeIn10 20s ease-in-out infinite; opacity: 0">
+    <text class="dim" x="36" y="326">Phase 4</text>
+    <text class="highlight" x="108" y="326">reporter</text>
+    <text class="output" x="196" y="326">integrating results...</text>
   </g>
 
   <!-- Progress bar -->
-  <g style="animation: fadeIn11 12s ease-in-out infinite; opacity: 0">
-    <text class="dim" x="52" y="336">Building report</text>
-    <rect x="196" y="324" width="290" height="14" rx="7" fill="#24283b"/>
-    <rect x="198" y="326" height="10" rx="5" fill="#7aa2f7" style="animation: progressBar 12s ease-in-out infinite; width: 0"/>
+  <g style="animation: fadeIn11 20s ease-in-out infinite; opacity: 0">
+    <text class="dim" x="52" y="350">Building report</text>
+    <rect x="196" y="338" width="290" height="14" rx="7" fill="#24283b"/>
+    <rect x="198" y="340" height="10" rx="5" fill="#7aa2f7" style="animation: progressBar 20s ease-in-out infinite; width: 0"/>
   </g>
 
-  <!-- Completion -->
-  <g style="animation: fadeIn13 12s ease-in-out infinite; opacity: 0">
-    <text class="dim" x="36" y="370">&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;</text>
+  <!-- Separator -->
+  <g style="animation: fadeIn12 20s ease-in-out infinite; opacity: 0">
+    <text class="dim" x="36" y="382">&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;</text>
   </g>
 
-  <g style="animation: fadeIn14 12s ease-in-out infinite; opacity: 0">
-    <text class="success" x="36" y="396">&#x2714; Analysis complete!</text>
-    <text class="output" x="36" y="420">Report saved to:</text>
-    <text class="accent" x="196" y="420">output/titanic/report_deep_analysis.md</text>
-    <text class="output" x="36" y="444">Visualizations:</text>
-    <text class="accent" x="196" y="444">output/titanic/*.png</text>
-    <text class="dim" x="36" y="468">4 agents | 3 phases | 4 plots | 1 report</text>
+  <!-- Completion (holds until 100%) -->
+  <g style="animation: fadeIn13 20s ease-in-out infinite; opacity: 0">
+    <text class="success" x="36" y="408">&#x2714; Analysis complete!</text>
+    <text class="output" x="36" y="432">Report saved to:</text>
+    <text class="accent" x="196" y="432">output/titanic/report_deep_analysis.md</text>
+    <text class="output" x="36" y="456">Visualizations:</text>
+    <text class="accent" x="196" y="456">output/titanic/*.png</text>
+    <text class="dim" x="36" y="480">4 agents | 4 phases | 4 plots | 1 report</text>
 
-    <text class="prompt" x="36" y="496">$</text>
-    <rect x="52" y="482" width="9" height="18" fill="#c0caf5" style="animation: cursor 0.8s step-end infinite"/>
+    <text class="prompt" x="36" y="504">$</text>
+    <rect x="52" y="490" width="9" height="18" fill="#c0caf5" style="animation: cursor 0.8s step-end infinite"/>
   </g>
 </svg>
