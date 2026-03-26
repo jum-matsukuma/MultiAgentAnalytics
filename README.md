@@ -37,7 +37,13 @@ Claude Code 上でそのまま入力する。
 
 自動でデータ概要の把握 → 品質チェック → 主要カラムの可視化 → レポート生成 が実行され、`output/` にMarkdownレポートが出力される。
 
-ディレクトリを指定すると、中のデータファイルをすべて分析する:
+複数ファイルをスペース区切りで指定すると、ファイル間の関係性を推測し一体的に分析する:
+
+```
+/analyze data/titanic/train.csv data/titanic/test.csv
+```
+
+ディレクトリ指定でも同様に、中のファイルを関連付けて分析する:
 
 ```
 /analyze data/titanic/
@@ -46,10 +52,10 @@ Claude Code 上でそのまま入力する。
 より深い分析が必要な場合は、マルチエージェントによる深層分析:
 
 ```
-/analyze-deep data/titanic/train.csv
+/analyze-deep data/titanic/train.csv data/titanic/test.csv
 ```
 
-domain-expert → data-analyst → visualizer → reporter の4エージェントが協調し、ドメイン理解・詳細分析・可視化・レポート統合を自動実行する。
+domain-expert → data-analyst → visualizer → reporter の4エージェントが協調し、ファイル間の関係性を踏まえたドメイン理解・詳細分析・可視化・レポート統合を自動実行する。
 
 ### 3. 自然言語で依頼
 
