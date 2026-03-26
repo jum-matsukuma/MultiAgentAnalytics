@@ -176,7 +176,7 @@ src/edatool/
 
 .claude/
 ├── agents/             # Agent definitions
-└── skills/             # Skills & domain knowledge
+└── skills/             # Skills & analysis guides
 ```
 
 ## Development

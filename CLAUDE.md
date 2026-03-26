@@ -83,9 +83,9 @@ project-root/
 ├── docs/research/       # 調査・設計ドキュメント
 ├── .claude/
 │   ├── agents/          # エージェント定義
-│   └── skills/          # スキル・ドメイン知識
+│   └── skills/          # スキル・分析ガイド
 │       ├── analysis-workflow/
-│       ├── domains/
+│       ├── analysis-guides/
 │       ├── development/
 │       └── teams/
 └── pyproject.toml
