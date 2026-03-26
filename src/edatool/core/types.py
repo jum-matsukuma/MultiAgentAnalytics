@@ -53,7 +53,7 @@ class DataSummary:
 
     def to_markdown(self) -> str:
         lines = [
-            f"## Dataset Summary",
+            "## Dataset Summary",
             f"- **Shape**: {self.shape[0]:,} rows × {self.shape[1]} columns",
         ]
         if self.memory_bytes:
@@ -83,24 +83,80 @@ class DataSummary:
 
 
 @dataclass
+class NullHandlingInfo:
+    """Information about how null values were handled in correlation."""
+
+    column: str
+    null_count: int
+    null_percent: float
+    rows_used_min: int  # minimum rows used across pairwise comparisons
+    rows_used_max: int  # maximum rows used across pairwise comparisons
+
+
+@dataclass
 class CorrelationResult:
     """Correlation analysis result."""
 
     matrix: dict[str, dict[str, float]]
     high_pairs: list[tuple[str, str, float]]  # |r| > threshold
     threshold: float = 0.8
+    null_handling: list[NullHandlingInfo] = field(default_factory=list)
+    total_rows: int = 0
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        result: dict[str, Any] = {
             "matrix": self.matrix,
             "high_pairs": [
                 {"col1": a, "col2": b, "correlation": r}
                 for a, b, r in self.high_pairs
             ],
         }
+        if self.null_handling:
+            result["null_handling"] = {
+                "method": "pairwise_complete_observations",
+                "total_rows": self.total_rows,
+                "columns_with_nulls": [
+                    {
+                        "column": nh.column,
+                        "null_count": nh.null_count,
+                        "null_percent": nh.null_percent,
+                        "rows_used_range": [nh.rows_used_min, nh.rows_used_max],
+                    }
+                    for nh in self.null_handling
+                ],
+            }
+        return result
 
     def to_markdown(self) -> str:
         lines = ["## Correlation Analysis"]
+
+        # Null handling section
+        if self.null_handling:
+            lines.append("")
+            lines.append("### Missing Value Handling")
+            lines.append("")
+            lines.append(
+                "Correlations computed using **pairwise complete observations**: "
+                "for each pair of columns, rows with nulls in either column are "
+                "excluded before computing the Pearson coefficient."
+            )
+            lines.append("")
+            lines.append(
+                "| Column | Nulls | Null% | Rows Used (min-max) |"
+            )
+            lines.append(
+                "|--------|------:|------:|--------------------:|"
+            )
+            for nh in self.null_handling:
+                if nh.rows_used_min == nh.rows_used_max:
+                    rows_str = f"{nh.rows_used_min:,}"
+                else:
+                    rows_str = f"{nh.rows_used_min:,}-{nh.rows_used_max:,}"
+                lines.append(
+                    f"| {nh.column} | {nh.null_count:,} "
+                    f"| {nh.null_percent:.1f}% | {rows_str} |"
+                )
+
         if self.high_pairs:
             lines.append("")
             lines.append(f"### High Correlation Pairs (|r| > {self.threshold})")
