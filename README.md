@@ -29,11 +29,11 @@ Type a slash command or natural language. Four specialized agents collaborate au
 ```
 
 ```mermaid
-graph LR
-    A["domain-expert<br/><small>Understand data</small>"] --> B["data-analyst<br/><small>Profile & statistics</small>"]
-    A --> C["visualizer<br/><small>Generate plots</small>"]
-    B --> D["reporter<br/><small>Build report</small>"]
-    C --> D
+graph TD
+    A["domain-expert"] -->|advise| B["data-analyst"]
+    A -->|advise| C["visualizer"]
+    B -->|findings| D["reporter"]
+    C -->|plots| D
     style A fill:#bb9af7,color:#1a1b26,stroke:none
     style B fill:#7aa2f7,color:#1a1b26,stroke:none
     style C fill:#7dcfff,color:#1a1b26,stroke:none
