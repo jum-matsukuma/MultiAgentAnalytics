@@ -1,25 +1,50 @@
+<div align="center">
+
 # MultiAgentAnalytics
 
-Claude Code環境を前提としたマルチエージェントデータ分析プラットフォーム。
-`edatool`（CLI + Python API）を通じて、複数の専門エージェントが協調してデータ分析を実行する。
+**Claude Code + Multi-Agent Data Analysis Platform**
 
-## Features
+*Speak to your data. Let specialized AI agents do the rest.*
 
-| 機能 | 説明 |
-|------|------|
-| **データ分析** | プロファイリング、統計分析、相関分析、品質チェック |
-| **可視化** | ヒストグラム、散布図、相関ヒートマップ |
-| **分析レシピ** | 再利用可能な定型分析パターン（A/Bテスト等） |
-| **データカタログ** | データセット登録、分析履歴の蓄積、横断検索・比較 |
-| **パイプライン** | JSON定義の分析ワークフロー、依存管理、再実行 |
-| **マルチエージェント** | 専門エージェント群による協調分析 |
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-3776ab?style=flat-square&logo=python&logoColor=white)](https://python.org)
+[![Polars](https://img.shields.io/badge/polars-powered-cd792c?style=flat-square)](https://pola.rs)
+[![Claude Code](https://img.shields.io/badge/claude--code-agents-7c3aed?style=flat-square)](https://claude.ai)
+
+</div>
+
+<br>
+
+<p align="center">
+  <img src="docs/assets/demo.svg" alt="MultiAgentAnalytics Demo" width="800">
+</p>
+
+<br>
+
+## How It Works
+
+Type a slash command or natural language. Four specialized agents collaborate automatically:
+
+```
+/analyze-deep data/titanic/train.csv
+```
+
+```mermaid
+graph LR
+    A["domain-expert<br/><small>Understand data</small>"] --> B["data-analyst<br/><small>Profile & statistics</small>"]
+    A --> C["visualizer<br/><small>Generate plots</small>"]
+    B --> D["reporter<br/><small>Build report</small>"]
+    C --> D
+    style A fill:#bb9af7,color:#1a1b26,stroke:none
+    style B fill:#7aa2f7,color:#1a1b26,stroke:none
+    style C fill:#7dcfff,color:#1a1b26,stroke:none
+    style D fill:#9ece6a,color:#1a1b26,stroke:none
+```
+
+Output: a comprehensive Markdown report with statistics, quality checks, and visualizations in `output/`.
+
+---
 
 ## Quick Start
-
-このリポジトリは **Claude Code 上で使うことを前提** に設計されている。
-リポジトリのルートで Claude Code を起動し、自然言語やスラッシュコマンドで分析を指示する。
-
-### 1. セットアップ
 
 ```bash
 git clone https://github.com/jum-matsukuma/MultiAgentAnalytics.git
@@ -27,226 +52,142 @@ cd MultiAgentAnalytics
 uv sync
 ```
 
-### 2. スラッシュコマンドで分析（推奨）
-
-Claude Code 上でそのまま入力する。
+Open Claude Code in the repo root and start analyzing:
 
 ```
 /analyze data/titanic/train.csv
 ```
 
-自動でデータ概要の把握 → 品質チェック → 主要カラムの可視化 → レポート生成 が実行され、`output/` にMarkdownレポートが出力される。
+That's it. The agents handle everything from profiling to visualization to report generation.
 
-複数ファイルをスペース区切りで指定すると、ファイル間の関係性を推測し一体的に分析する:
+---
+
+## Visualization Examples
+
+Generated automatically from `data/titanic/train.csv` via `edatool`:
+
+<table>
+<tr>
+<td align="center"><strong>Age Distribution</strong></td>
+<td align="center"><strong>Age vs Fare</strong></td>
+</tr>
+<tr>
+<td><img src="docs/assets/example_histogram_age.png" width="400" alt="Histogram of Age"></td>
+<td><img src="docs/assets/example_scatter_age_fare.png" width="400" alt="Age vs Fare scatter plot"></td>
+</tr>
+<tr>
+<td align="center" colspan="2"><strong>Correlation Heatmap</strong></td>
+</tr>
+<tr>
+<td colspan="2" align="center"><img src="docs/assets/example_heatmap.png" width="560" alt="Correlation heatmap"></td>
+</tr>
+</table>
+
+---
+
+## Commands
+
+### Slash Commands (in Claude Code)
+
+| Command | Description |
+|---------|-------------|
+| `/analyze <paths...>` | Quick analysis: profiling + quality + visualization + report |
+| `/analyze-deep <paths...>` | Deep multi-agent analysis with domain expert guidance |
+| `/review` | Code review |
+| `/test` | Auto-generate tests |
+| `/pr` | Create branch, commit, and PR in one step |
+| `/docs` | Generate documentation |
+
+Pass a single file, multiple files, or a directory:
 
 ```
-/analyze data/titanic/train.csv data/titanic/test.csv
+/analyze data/titanic/train.csv                    # single file
+/analyze data/titanic/train.csv data/titanic/test.csv   # multiple files
+/analyze data/titanic/                             # entire directory
 ```
 
-ディレクトリ指定でも同様に、中のファイルを関連付けて分析する:
-
-```
-/analyze data/titanic/
-```
-
-より深い分析が必要な場合は、マルチエージェントによる深層分析:
-
-```
-/analyze-deep data/titanic/train.csv data/titanic/test.csv
-```
-
-domain-expert → data-analyst → visualizer → reporter の4エージェントが協調し、ファイル間の関係性を踏まえたドメイン理解・詳細分析・可視化・レポート統合を自動実行する。
-
-### 3. 自然言語で依頼
-
-スラッシュコマンドを使わず、テキストで直接依頼しても同様の分析ができる:
-
-```
-このCSVファイルを分析して: data/titanic/train.csv
-```
-
-Claude Code が edatool の CLI/Python API とエージェントを自動的に活用し、分析を実行する。
-より具体的な指示も可能:
-
-```
-data/titanic/train.csv の性別による生存率の差をA/Bテストで検証して
-```
-
-```
-data/titanic/ ディレクトリのデータを全て分析して、train と test の違いを比較して
-```
-
-### 4. その他のスラッシュコマンド
-
-| コマンド | 説明 |
-|---------|------|
-| `/analyze <paths...>` | クイック分析（概要 + 品質 + 可視化 + レポート） |
-| `/analyze-deep <paths...>` | マルチエージェント深層分析 |
-| `/review` | コードレビュー |
-| `/test` | テスト自動生成 |
-| `/pr` | ブランチ作成 → コミット → PR作成を一括実行 |
-| `/docs` | ドキュメント生成 |
-| `/turn-main` | mainブランチに切り替え + 最新pull |
-
-## edatool CLI
-
-### データ分析
+### edatool CLI
 
 ```bash
-uv run edatool summarize <file>                          # 概要（軽量）
-uv run edatool profile <file>                            # フルプロファイル
-uv run edatool correlations <file> [--target col]        # 相関分析
-uv run edatool quality-check <file>                      # 品質チェック
-```
+# Analysis
+uv run edatool summarize <file>                    # Quick summary
+uv run edatool profile <file>                      # Full profile
+uv run edatool correlations <file> [--target col]  # Correlation analysis
+uv run edatool quality-check <file>                # Quality check
 
-### 可視化
-
-```bash
+# Visualization
 uv run edatool plot histogram <file> --column <col> -o <out.png>
 uv run edatool plot scatter <file> --x <col1> --y <col2> -o <out.png>
 uv run edatool plot heatmap <file> -o <out.png>
-```
 
-### 分析レシピ
-
-テスト済みの再利用可能な分析パターン。
-
-```bash
-uv run edatool recipe list                               # レシピ一覧
-uv run edatool recipe info ab-test                       # レシピ詳細
-uv run edatool recipe run ab-test <file> \               # レシピ実行
+# Recipes
+uv run edatool recipe run ab-test <file> \
   -p group=variant -p metric=revenue \
   -p control=A -p treatment=B
+
+# Data Catalog
+uv run edatool catalog register data/train.csv --name titanic --tags "kaggle"
+uv run edatool catalog list
+uv run edatool catalog compare train test
+
+# Pipelines
+uv run edatool pipeline init -t basic-eda -o pipelines/my_eda.json
+uv run edatool pipeline run pipelines/my_eda.json -p data_file=data/train.csv
 ```
 
-**組み込みレシピ:**
+---
 
-| レシピ | 説明 |
-|--------|------|
-| `ab-test` | A/Bテスト分析（t検定/z検定、Cohen's d、信頼区間） |
+## Agent Architecture
 
-### データカタログ
+### Analysis Agents
 
-データセットと分析履歴を管理・蓄積する。
+| Agent | Role |
+|-------|------|
+| `domain-expert` | Identifies domain context and advises analysis direction |
+| `data-analyst` | Full profiling, statistics, correlation, quality checks |
+| `visualizer` | Generates charts and plots |
+| `reporter` | Integrates all findings into a structured report |
 
-```bash
-uv run edatool catalog register data/train.csv \         # データセット登録
-  --name titanic --tags "kaggle,titanic"
-uv run edatool catalog list                              # 一覧
-uv run edatool catalog search "titanic"                  # 検索
-uv run edatool catalog show titanic                      # 詳細表示
-uv run edatool catalog compare train test                # 2データセット比較
-uv run edatool catalog record titanic \                  # 分析結果の記録
-  --analysis-type profile --findings "女性の生存率が高い"
-uv run edatool catalog check-freshness                   # ファイル変更検出
-```
+### Development Agents
 
-### パイプライン
+| Agent | Role |
+|-------|------|
+| `team-lead` | Orchestrates multi-agent workflows |
+| `backend-dev` | Backend development |
+| `qa-tester` | Testing and QA |
+| `code-reviewer` | Code review |
 
-JSON定義の分析ワークフローを保存・再実行する。
-
-```bash
-uv run edatool pipeline init -t basic-eda \              # テンプレートから生成
-  -o pipelines/my_eda.json
-uv run edatool pipeline info pipelines/my_eda.json       # パイプライン情報
-uv run edatool pipeline run pipelines/my_eda.json \      # 実行
-  -p data_file=data/train.csv
-uv run edatool pipeline run pipelines/my_eda.json \      # ドライラン
-  -p data_file=data/train.csv --dry-run
-uv run edatool pipeline run pipelines/my_eda.json \      # 途中から再実行
-  -p data_file=data/train.csv --from-step heatmap
-```
-
-**組み込みテンプレート:**
-
-| テンプレート | 説明 |
-|-------------|------|
-| `basic-eda` | 品質チェック + プロファイル + 相関分析 + ヒートマップ |
-| `quality-monitor` | データ品質モニタリング |
-
-### 共通オプション
-
-```bash
---format markdown    # 出力形式: markdown（デフォルト）または json
---format json
--o <file>            # ファイルに保存（省略時はstdout）
-```
-
-## Multi-Agent Architecture
-
-Claude Codeの専門エージェントが協調してデータ分析を実行する。
-
-### 分析エージェント
-
-| エージェント | 役割 |
-|---|---|
-| `domain-expert` | データ概要を見て分析方針を助言 |
-| `data-analyst` | プロファイリング・統計分析・品質チェック |
-| `visualizer` | グラフ・チャート生成 |
-| `reporter` | 分析結果・グラフをレポートに統合 |
-
-### 分析ワークフロー
-
-```mermaid
-sequenceDiagram
-    participant DE as domain-expert
-    participant DA as data-analyst
-    participant VZ as visualizer
-    participant RP as reporter
-
-    DE->>DA: 分析方針を助言
-    DA->>DA: プロファイリング
-    DA->>DA: 品質チェック
-    DA->>DA: 相関分析
-    DA->>VZ: 重要な知見を共有
-    VZ->>VZ: グラフ・チャート生成
-    VZ->>RP: 可視化結果を共有
-    DA->>RP: 分析結果を共有
-    RP->>RP: レポート統合・整形
-```
-
-### 汎用エージェント
-
-| エージェント | 用途 |
-|---|---|
-| `team-lead` | チームオーケストレーター |
-| `backend-dev` | バックエンド開発 |
-| `qa-tester` | テスト・QA |
-| `code-reviewer` | コードレビュー |
+---
 
 ## Project Structure
 
 ```
 src/edatool/
-├── cli.py              # CLIエントリーポイント
-├── core/               # 型定義・設定
-├── io/                 # データ読込（CSV, Parquet, Excel, JSON）
-├── analysis/           # 分析モジュール（stats, profiler, correlation, quality）
-├── viz/                # 可視化（histogram, scatter, heatmap）
-├── reporting/          # Markdownレポート生成
-├── recipes/            # 分析レシピ（A/Bテスト等）
-├── catalog/            # データカタログ・分析履歴
-└── pipeline/           # パイプライン定義・実行エンジン
+├── cli.py              # CLI entry point
+├── core/               # Type definitions, config
+├── io/                 # Data loading (CSV, Parquet, Excel, JSON)
+├── analysis/           # Stats, profiler, correlation, quality
+├── viz/                # Histogram, scatter, heatmap
+├── reporting/          # Markdown report generation
+├── recipes/            # Reusable analysis patterns (A/B test, etc.)
+├── catalog/            # Data catalog & analysis history
+└── pipeline/           # Pipeline definition & execution engine
 
 .claude/
-├── agents/             # エージェント定義
-└── skills/             # スキル・ドメイン知識
+├── agents/             # Agent definitions
+└── skills/             # Skills & domain knowledge
 ```
 
 ## Development
 
 ```bash
-uv sync --extra dev              # 開発依存インストール
-uv run python -m pytest          # テスト実行
-uv run python -m ruff check      # リント
-uv run python -m black .         # フォーマット
-uv run python -m mypy .          # 型チェック
+uv sync --extra dev              # Install dev dependencies
+uv run python -m pytest          # Tests
+uv run python -m ruff check      # Lint
+uv run python -m black .         # Format
+uv run python -m mypy .          # Type check
 ```
 
 ## Tech Stack
 
-- **Python 3.11+**
-- **Polars** - メインのDataFrameライブラリ
-- **Matplotlib / Seaborn / Plotly** - 可視化
-- **Typer** - CLI フレームワーク
-- **Claude Code** - マルチエージェント実行環境
+**Python 3.11+** / **Polars** / **Matplotlib** / **Seaborn** / **Typer** / **Claude Code**
