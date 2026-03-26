@@ -16,23 +16,77 @@ Claude Code環境を前提としたマルチエージェントデータ分析プ
 
 ## Quick Start
 
+このリポジトリは **Claude Code 上で使うことを前提** に設計されている。
+リポジトリのルートで Claude Code を起動し、自然言語やスラッシュコマンドで分析を指示する。
+
+### 1. セットアップ
+
 ```bash
-# セットアップ
+git clone https://github.com/jum-matsukuma/MultiAgentAnalytics.git
+cd MultiAgentAnalytics
 uv sync
-
-# データ分析
-uv run edatool summarize data/titanic/train.csv
-uv run edatool profile data/titanic/train.csv
-uv run edatool quality-check data/titanic/train.csv
-
-# 可視化
-uv run edatool plot histogram data/titanic/train.csv --column Age -o age_hist.png
-uv run edatool plot heatmap data/titanic/train.csv -o heatmap.png
-
-# A/Bテストレシピ
-uv run edatool recipe run ab-test data/titanic/train.csv \
-  -p group=Sex -p metric=Survived -p control=male -p treatment=female
 ```
+
+### 2. スラッシュコマンドで分析（推奨）
+
+Claude Code 上でそのまま入力する。
+
+```
+/analyze data/titanic/train.csv
+```
+
+自動でデータ概要の把握 → 品質チェック → 主要カラムの可視化 → レポート生成 が実行され、`output/` にMarkdownレポートが出力される。
+
+複数ファイルをスペース区切りで指定すると、ファイル間の関係性を推測し一体的に分析する:
+
+```
+/analyze data/titanic/train.csv data/titanic/test.csv
+```
+
+ディレクトリ指定でも同様に、中のファイルを関連付けて分析する:
+
+```
+/analyze data/titanic/
+```
+
+より深い分析が必要な場合は、マルチエージェントによる深層分析:
+
+```
+/analyze-deep data/titanic/train.csv data/titanic/test.csv
+```
+
+domain-expert → data-analyst → visualizer → reporter の4エージェントが協調し、ファイル間の関係性を踏まえたドメイン理解・詳細分析・可視化・レポート統合を自動実行する。
+
+### 3. 自然言語で依頼
+
+スラッシュコマンドを使わず、テキストで直接依頼しても同様の分析ができる:
+
+```
+このCSVファイルを分析して: data/titanic/train.csv
+```
+
+Claude Code が edatool の CLI/Python API とエージェントを自動的に活用し、分析を実行する。
+より具体的な指示も可能:
+
+```
+data/titanic/train.csv の性別による生存率の差をA/Bテストで検証して
+```
+
+```
+data/titanic/ ディレクトリのデータを全て分析して、train と test の違いを比較して
+```
+
+### 4. その他のスラッシュコマンド
+
+| コマンド | 説明 |
+|---------|------|
+| `/analyze <paths...>` | クイック分析（概要 + 品質 + 可視化 + レポート） |
+| `/analyze-deep <paths...>` | マルチエージェント深層分析 |
+| `/review` | コードレビュー |
+| `/test` | テスト自動生成 |
+| `/pr` | ブランチ作成 → コミット → PR作成を一括実行 |
+| `/docs` | ドキュメント生成 |
+| `/turn-main` | mainブランチに切り替え + 最新pull |
 
 ## edatool CLI
 
