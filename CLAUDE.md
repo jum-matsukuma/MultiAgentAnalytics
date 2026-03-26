@@ -60,6 +60,14 @@ uv run python -m mypy .          # Type check
 | `qa-tester` | テスト・QA |
 | `code-reviewer` | コードレビュー |
 
+## 欠損値の取り扱い方針
+
+分析・可視化において欠損値（null）は以下の方針で処理する:
+
+- **相関分析・ヒートマップ**: ペアワイズ完全観測（pairwise complete observations）。各列ペアごとにnullを除外して相関を計算する。`edatool correlations` および `edatool plot heatmap` は自動でこの処理を行う
+- **レポート出力**: 欠損値がある場合、どの列にいくつの欠損があり、相関計算に何行使われたかをレポートに明記する
+- **エージェントへの指示**: data-analyst / visualizer は分析結果に「欠損値の状況」と「どう処理したか」を必ずレポートに含めること。欠損値を暗黙に無視してはならない
+
 ## Code Style
 
 - Polarsをメインのデータフレームライブラリとして使用
